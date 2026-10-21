@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Spotify Liquid</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <!-- Lucide Icons (React UMD Version) -->
-    <script src="https://unpkg.com/lucide-react@0.292.0/dist/umd/lucide-react.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
@@ -40,24 +39,24 @@
             -webkit-user-select: none;
         }
 
-        /* Message d'erreur visible si le JS plante */
-        #error-boundary {
-            display: none;
+        /* Écran de chargement pour éviter le flash noir */
+        #loader {
             position: fixed;
             inset: 0;
-            background: #111;
-            color: #ff4444;
-            padding: 20px;
-            font-family: monospace;
-            z-index: 9999;
-            white-space: pre-wrap;
-            overflow: auto;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+            color: var(--spotify-green);
+            font-weight: bold;
+            font-size: 1.2rem;
         }
 
         ::-webkit-scrollbar { display: none; }
         * { scrollbar-width: none; -ms-overflow-style: none; }
 
-        /* Real Liquid Glass Effect */
+        /* Effet Liquid Glass */
         .liquid-glass {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.0) 100%);
             background-color: rgba(18, 18, 18, 0.65);
@@ -106,7 +105,6 @@
             transition: transform 0.1s;
         }
 
-        /* Custom Scrollbar for horizontal lists */
         .horizontal-scroll {
             overflow-x: auto;
             scroll-snap-type: x mandatory;
@@ -116,7 +114,6 @@
 
         .text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
-        /* Progress Bar */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: white; cursor: pointer; margin-top: -5px; box-shadow: 0 0 4px rgba(0,0,0,0.5);
@@ -125,24 +122,39 @@
     </style>
 </head>
 <body>
-    <div id="error-boundary"></div>
+    <div id="loader">Chargement de Spotify...</div>
     <div id="root"></div>
-
-    <script>
-        // Afficher les erreurs à l'écran pour le débogage
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            const eb = document.getElementById('error-boundary');
-            eb.style.display = 'block';
-            eb.innerHTML += `ERREUR: ${msg}\nLigne: ${lineNo}\n\n`;
-            return false;
-        };
-    </script>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
-        // Correction : Utilisation de LucideReact (L majuscule) selon le build UMD
-        const { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Home, Search, Library, Plus, Menu, ChevronLeft, ChevronDown, ListMusic, MonitorSpeaker, Mic2, Download, MoreHorizontal, Heart } = LucideReact;
 
+        // --- CUSTOM SVG ICONS (100% FIABLES, PAS DE CDN) ---
+        const Svg = ({ children, size = 24, fill = "none", stroke = "currentColor", strokeWidth = 2, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {children}
+            </svg>
+        );
+        const Play = (p) => <Svg {...p}><polygon points="5 3 19 12 5 21 5 3"></polygon></Svg>;
+        const Pause = (p) => <Svg {...p}><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></Svg>;
+        const SkipBack = (p) => <Svg {...p}><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></Svg>;
+        const SkipForward = (p) => <Svg {...p}><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></Svg>;
+        const Shuffle = (p) => <Svg {...p}><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></Svg>;
+        const Repeat = (p) => <Svg {...p}><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></Svg>;
+        const Home = (p) => <Svg {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></Svg>;
+        const Search = (p) => <Svg {...p}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></Svg>;
+        const Library = (p) => <Svg {...p}><path d="m16 6 4 14"></path><path d="M12 6v14"></path><path d="M8 8v12"></path><path d="M4 4v16"></path></Svg>;
+        const Plus = (p) => <Svg {...p}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></Svg>;
+        const Menu = (p) => <Svg {...p}><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></Svg>;
+        const ChevronLeft = (p) => <Svg {...p}><polyline points="15 18 9 12 15 6"></polyline></Svg>;
+        const ChevronDown = (p) => <Svg {...p}><polyline points="6 9 12 15 18 9"></polyline></Svg>;
+        const ListMusic = (p) => <Svg {...p}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></Svg>;
+        const MonitorSpeaker = (p) => <Svg {...p}><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></Svg>;
+        const Mic2 = (p) => <Svg {...p}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></Svg>;
+        const Download = (p) => <Svg {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></Svg>;
+        const MoreHorizontal = (p) => <Svg {...p}><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></Svg>;
+        const Heart = (p) => <Svg {...p}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></Svg>;
+
+        // --- MOCK DATA ---
         const MOCK_TRACKS = [
             { id: 1, title: "Feu de bois", artist: "Damso", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", duration: "3:45", explicit: true },
             { id: 2, title: "Macarena", artist: "Damso", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", duration: "3:12", explicit: true },
@@ -150,10 +162,7 @@
             { id: 4, title: "J Respect R", artist: "Damso", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", duration: "3:30", explicit: false },
         ];
 
-        const MOCK_PLAYLIST_FR = {
-            id: "fr", title: "FR", author: "nuhi", duration: "9 h 15 m",
-            tracks: MOCK_TRACKS
-        };
+        const MOCK_PLAYLIST_FR = { id: "fr", title: "FR", author: "nuhi", duration: "9 h 15 m", tracks: MOCK_TRACKS };
 
         const MOCK_ARTIST = {
             id: "nono", name: "NONO LA GRINTA", listeners: "4,8 M auditeurs mensuels", image: "https://images.unsplash.com/photo-1501612780327-45045538702b?w=800&q=80",
@@ -175,6 +184,11 @@
             const [isPlayerOpen, setIsPlayerOpen] = useState(false);
             
             const audioRef = useRef(null);
+
+            // Retirer le loader une fois React monté
+            useEffect(() => {
+                document.getElementById('loader').style.display = 'none';
+            }, []);
 
             useEffect(() => {
                 if (audioRef.current) {
@@ -201,11 +215,7 @@
                 }
             };
 
-            const playTrack = (track) => {
-                setCurrentTrack(track);
-                setIsPlaying(true);
-            };
-
+            const playTrack = (track) => { setCurrentTrack(track); setIsPlaying(true); };
             const navigateToPlaylist = (playlist) => { setSelectedItem(playlist); setCurrentScreen('playlist'); };
             const navigateToArtist = (artist) => { setSelectedItem(artist); setCurrentScreen('artist'); };
             const goBack = () => { setCurrentScreen('main'); setSelectedItem(null); };
@@ -227,7 +237,7 @@
                     <audio ref={audioRef} src={currentTrack.audio} onTimeUpdate={handleTimeUpdate} onEnded={() => setIsPlaying(false)} />
 
                     <div className="h-[var(--safe-top)] w-full flex items-center justify-between px-6 pt-2 text-sm font-semibold z-50 shrink-0 pointer-events-none">
-                        <span>03:05</span>
+                        <span>13:24</span>
                         <div className="flex items-center space-x-1">
                             <span>5G</span>
                             <div className="w-6 h-3 border border-white rounded-[3px] relative"><div className="absolute top-0 right-0 bottom-0 left-0 bg-white rounded-[1px] m-[1px]" style={{width: '75%'}}></div></div>
@@ -288,7 +298,6 @@
                             <div onClick={() => onArtistClick(MOCK_ARTIST)} className="min-w-[160px] w-[160px] cursor-pointer group">
                                 <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2 shadow-lg">
                                     <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&q=80" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300" alt="EP" />
-                                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
                                 </div>
                                 <p className="text-sm font-semibold truncate">EP</p>
                                 <p className="text-xs text-[var(--text-secondary)] truncate">teenage dream</p>
@@ -298,14 +307,10 @@
                                     <img src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=80" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300" alt="Playlist" />
                                     <div className="absolute inset-0 flex flex-col justify-end p-3">
                                         <h3 className="text-red-600 font-black text-2xl leading-none tracking-tighter uppercase" style={{fontFamily: 'Impact, sans-serif'}}>ALL DED</h3>
-                                        <h3 className="text-red-600 font-black text-2xl leading-none tracking-tighter uppercase" style={{fontFamily: 'Impact, sans-serif'}}>ALL DED</h3>
                                     </div>
                                 </div>
                                 <p className="text-sm font-semibold truncate">Playlist</p>
                                 <p className="text-xs text-[var(--text-secondary)] truncate">US</p>
-                            </div>
-                            <div className="min-w-[160px] w-[160px]">
-                                <div className="w-full aspect-square rounded-lg bg-neutral-800 mb-2"></div>
                             </div>
                         </div>
                     </section>
@@ -315,7 +320,7 @@
                             {[
                                 { title: "Nouméa", bg: "bg-[#3e3e3e]", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=100&q=80" },
                                 { title: "Titres likés", bg: "bg-gradient-to-br from-indigo-600 to-purple-800", img: "heart" },
-                                { title: "Alex G playlist except it's all hi...", bg: "bg-[#5a3a22]", img: "https://images.unsplash.com/photo-1501612780327-45045538702b?w=100&q=80" },
+                                { title: "Alex G playlist...", bg: "bg-[#5a3a22]", img: "https://images.unsplash.com/photo-1501612780327-45045538702b?w=100&q=80" },
                                 { title: "a6el", bg: "bg-[#4a2e1e]", img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&q=80" },
                                 { title: "", bg: "bg-[#3d1a14]", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&q=80" },
                                 { title: "Theodora", bg: "bg-[#2a1b54]", img: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=100&q=80" },
@@ -325,7 +330,7 @@
                                 <div key={i} onClick={() => item.title === "FR" ? onPlaylistClick(MOCK_PLAYLIST_FR) : null} className={`${item.bg} flex items-center rounded-md overflow-hidden h-14 active-scale cursor-pointer relative shadow-sm`}>
                                     {item.img === "heart" ? (
                                         <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-white flex items-center justify-center shrink-0">
-                                            <Heart size={24} fill="white" className="text-white" />
+                                            <Heart size={24} fill="white" stroke="white" />
                                         </div>
                                     ) : (
                                         <img src={item.img} className="w-14 h-14 object-cover shrink-0" alt={item.title} />
@@ -333,22 +338,6 @@
                                     <span className="text-xs font-bold px-2 line-clamp-2">{item.title}</span>
                                 </div>
                             ))}
-                        </div>
-                    </section>
-
-                    <section className="px-5 pb-20">
-                        <h2 className="text-xl font-bold mb-4 tracking-tight">Recommandations du jour</h2>
-                        <div className="flex space-x-4 overflow-x-auto pb-4 horizontal-scroll -mx-5 px-5">
-                            <div className="min-w-[140px] w-[140px]">
-                                <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80" className="w-full aspect-square rounded-md object-cover mb-2 shadow-md" alt="Rec 1" />
-                                <p className="text-sm font-semibold truncate">Daily Mix 1</p>
-                                <p className="text-xs text-[var(--text-secondary)] line-clamp-2">Damso, Nono La Grinta, Heuss...</p>
-                            </div>
-                            <div className="min-w-[140px] w-[140px]">
-                                <img src="https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=300&q=80" className="w-full aspect-square rounded-md object-cover mb-2 shadow-md" alt="Rec 2" />
-                                <p className="text-sm font-semibold truncate">Mix Rap FR</p>
-                                <p className="text-xs text-[var(--text-secondary)] line-clamp-2">Les meilleurs sons du moment</p>
-                            </div>
                         </div>
                     </section>
                 </div>
