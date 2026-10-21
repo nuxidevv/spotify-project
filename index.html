@@ -9,7 +9,7 @@
     <!-- React -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <!-- Lucide Icons (React Version) -->
+    <!-- Lucide Icons (React UMD Version) -->
     <script src="https://unpkg.com/lucide-react@0.292.0/dist/umd/lucide-react.min.js"></script>
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -57,6 +57,7 @@
         ::-webkit-scrollbar { display: none; }
         * { scrollbar-width: none; -ms-overflow-style: none; }
 
+        /* Real Liquid Glass Effect */
         .liquid-glass {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.0) 100%);
             background-color: rgba(18, 18, 18, 0.65);
@@ -87,6 +88,7 @@
             box-shadow: 0 -4px 30px rgba(0,0,0,0.5);
         }
 
+        /* Animations */
         @keyframes slideUp {
             from { transform: translateY(100%); }
             to { transform: translateY(0); }
@@ -104,6 +106,7 @@
             transition: transform 0.1s;
         }
 
+        /* Custom Scrollbar for horizontal lists */
         .horizontal-scroll {
             overflow-x: auto;
             scroll-snap-type: x mandatory;
@@ -113,6 +116,7 @@
 
         .text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
+        /* Progress Bar */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: white; cursor: pointer; margin-top: -5px; box-shadow: 0 0 4px rgba(0,0,0,0.5);
@@ -136,8 +140,8 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
-        // Utilisation de lucideReact au lieu de lucide
-        const { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Home, Search, Library, Plus, Menu, ChevronLeft, ChevronDown, ListMusic, MonitorSpeaker, Mic2, Download, MoreHorizontal, Heart } = lucideReact;
+        // Correction : Utilisation de LucideReact (L majuscule) selon le build UMD
+        const { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Home, Search, Library, Plus, Menu, ChevronLeft, ChevronDown, ListMusic, MonitorSpeaker, Mic2, Download, MoreHorizontal, Heart } = LucideReact;
 
         const MOCK_TRACKS = [
             { id: 1, title: "Feu de bois", artist: "Damso", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", duration: "3:45", explicit: true },
