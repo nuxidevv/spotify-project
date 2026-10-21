@@ -3,19 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spotify Extreme Glass</title>
+    <title>Prism Audio</title>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Syne:wght@700;800&display=swap');
+
         :root {
-            --spotify-green: #1ed760;
-            --bg-base: #000000;
+            --accent: #00f0ff;
+            --accent-glow: rgba(0, 240, 255, 0.4);
+            --bg-base: #050505;
             --text-primary: #ffffff;
-            --text-secondary: #a7a7a7;
+            --text-secondary: #8a8a93;
             --safe-top: env(safe-area-inset-top, 20px);
             --safe-bottom: env(safe-area-inset-bottom, 20px);
         }
@@ -30,185 +35,195 @@
             padding: 0;
             background-color: var(--bg-base);
             color: var(--text-primary);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(80, 0, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.1) 0%, transparent 40%);
+        }
+
+        h1, h2, h3, .font-display {
+            font-family: 'Syne', sans-serif;
+            text-transform: uppercase;
         }
 
         #loader {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9998;
-            color: var(--spotify-green);
-            font-weight: bold;
-            font-size: 1.2rem;
+            position: fixed; inset: 0; background: #000;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; color: var(--accent); font-weight: bold; font-family: 'Syne', sans-serif;
+            letter-spacing: 2px; animation: pulse 1.5s infinite;
         }
+
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
         ::-webkit-scrollbar { display: none; }
         * { scrollbar-width: none; -ms-overflow-style: none; }
 
-        /* LIQUID GLASS EXTREME */
-        .glass-extreme {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%);
-            backdrop-filter: blur(35px) saturate(200%) contrast(110%);
-            -webkit-backdrop-filter: blur(35px) saturate(200%) contrast(110%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-top: 1px solid rgba(255, 255, 255, 0.4);
-            border-left: 1px solid rgba(255, 255, 255, 0.2);
+        /* --- LIQUID GLASS EXTREME SYSTEM --- */
+        .glass {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(40px) saturate(200%) contrast(110%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%) contrast(110%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 
                 0 20px 40px rgba(0,0,0,0.6),
-                inset 0 1px 2px rgba(255,255,255,0.5),
-                inset 0 -2px 4px rgba(0,0,0,0.3);
+                inset 0 1px 2px rgba(255,255,255,0.4),
+                inset 0 -2px 5px rgba(0,0,0,0.5);
             position: relative;
             overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        .glass-extreme::after {
+        /* Reflet spéculaire animé */
+        .glass::before {
             content: '';
             position: absolute;
-            top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transform: skewX(-20deg);
-            animation: shine 6s infinite;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .glass:active::before { opacity: 1; }
+
+        /* Texture de verre */
+        .glass::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1;
+            mix-blend-mode: overlay;
         }
 
-        .glass-nav-extreme {
-            background: linear-gradient(to top, rgba(10, 10, 10, 0.95), rgba(30, 30, 30, 0.6));
-            backdrop-filter: blur(40px) saturate(250%);
-            -webkit-backdrop-filter: blur(40px) saturate(250%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .glass-nav {
+            background: linear-gradient(to top, rgba(10, 10, 12, 0.95), rgba(25, 25, 30, 0.7));
+            backdrop-filter: blur(50px) saturate(250%);
+            -webkit-backdrop-filter: blur(50px) saturate(250%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-top-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 
-                0 -10px 40px rgba(0,0,0,0.8),
-                inset 0 1px 0 rgba(255,255,255,0.2);
+            box-shadow: 0 -15px 40px rgba(0,0,0,0.9), inset 0 1px 1px rgba(255,255,255,0.2);
         }
 
-        @keyframes shine {
-            0% { left: -100%; }
-            20% { left: 200%; }
-            100% { left: 200%; }
+        .glass-player {
+            background: rgba(15, 15, 20, 0.6);
+            backdrop-filter: blur(50px) saturate(200%);
+            -webkit-backdrop-filter: blur(50px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.3);
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-        .animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        /* --- ANIMATIONS --- */
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
 
-        @keyframes slideDown {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .animate-slide-down { animation: slideDown 0.3s ease-out forwards; }
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        .active-scale:active {
-            transform: scale(0.94);
-            transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .active-scale:active { transform: scale(0.92); transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        .horizontal-scroll {
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-        }
+        .horizontal-scroll { overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
         .horizontal-scroll > * { scroll-snap-align: start; }
 
-        .text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+        .text-shadow { text-shadow: 0 4px 12px rgba(0,0,0,0.8); }
 
+        /* Custom Range Slider */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: white; cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: white; cursor: pointer; margin-top: -6px; box-shadow: 0 0 15px rgba(255,255,255,0.8);
         }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+        .toggle-checkbox:checked { right: 0; border-color: var(--accent); }
+        .toggle-checkbox:checked + .toggle-label { background-color: var(--accent); }
     </style>
 </head>
 <body>
-    <div id="loader">Chargement...</div>
+    <div id="loader">PRISM</div>
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- SVG ICONS ---
-        const Svg = ({ children, size = 24, fill = "none", stroke = "currentColor", strokeWidth = 2, className = "" }) => (
+        // --- CUSTOM SVG ICONS ---
+        const Icon = ({ d, size = 24, fill = "none", stroke = "currentColor", strokeWidth = 2, className = "" }) => (
             <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
-                {children}
+                {d}
             </svg>
         );
-        const Play = (p) => <Svg {...p}><polygon points="5 3 19 12 5 21 5 3"></polygon></Svg>;
-        const Pause = (p) => <Svg {...p}><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></Svg>;
-        const SkipBack = (p) => <Svg {...p}><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></Svg>;
-        const SkipForward = (p) => <Svg {...p}><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></Svg>;
-        const Shuffle = (p) => <Svg {...p}><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></Svg>;
-        const Repeat = (p) => <Svg {...p}><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></Svg>;
-        const HomeIcon = (p) => <Svg {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></Svg>;
-        const Search = (p) => <Svg {...p}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></Svg>;
-        const Library = (p) => <Svg {...p}><path d="m16 6 4 14"></path><path d="M12 6v14"></path><path d="M8 8v12"></path><path d="M4 4v16"></path></Svg>;
-        const Plus = (p) => <Svg {...p}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></Svg>;
-        const Menu = (p) => <Svg {...p}><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></Svg>;
-        const ChevronLeft = (p) => <Svg {...p}><polyline points="15 18 9 12 15 6"></polyline></Svg>;
-        const ChevronDown = (p) => <Svg {...p}><polyline points="6 9 12 15 18 9"></polyline></Svg>;
-        const ListMusic = (p) => <Svg {...p}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></Svg>;
-        const MonitorSpeaker = (p) => <Svg {...p}><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></Svg>;
-        const Mic2 = (p) => <Svg {...p}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></Svg>;
-        const Download = (p) => <Svg {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></Svg>;
-        const MoreHorizontal = (p) => <Svg {...p}><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></Svg>;
-        const Heart = (p) => <Svg {...p}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></Svg>;
-        const UserIcon = (p) => <Svg {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></Svg>;
+        const Play = (p) => <Icon {...p} d={<polygon points="5 3 19 12 5 21 5 3" />} />;
+        const Pause = (p) => <Icon {...p} d={<><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></>} />;
+        const SkipBack = (p) => <Icon {...p} d={<><polygon points="19 20 9 12 19 4 19 20" /><line x1="5" y1="19" x2="5" y2="5" /></>} />;
+        const SkipForward = (p) => <Icon {...p} d={<><polygon points="5 4 15 12 5 20 5 4" /><line x1="19" y1="5" x2="19" y2="19" /></>} />;
+        const Shuffle = (p) => <Icon {...p} d={<><polyline points="16 3 21 3 21 8" /><line x1="4" y1="20" x2="21" y2="3" /><polyline points="21 16 21 21 16 21" /><line x1="15" y1="15" x2="21" y2="21" /><line x1="4" y1="4" x2="9" y2="9" /></>} />;
+        const Repeat = (p) => <Icon {...p} d={<><polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></>} />;
+        const HomeIcon = (p) => <Icon {...p} d={<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></>} />;
+        const Search = (p) => <Icon {...p} d={<><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>} />;
+        const Library = (p) => <Icon {...p} d={<><path d="m16 6 4 14" /><path d="M12 6v14" /><path d="M8 8v12" /><path d="M4 4v16" /></>} />;
+        const Plus = (p) => <Icon {...p} d={<><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>} />;
+        const Menu = (p) => <Icon {...p} d={<><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></>} />;
+        const ChevronLeft = (p) => <Icon {...p} d={<polyline points="15 18 9 12 15 6" />} />;
+        const ChevronDown = (p) => <Icon {...p} d={<polyline points="6 9 12 15 18 9" />} />;
+        const ListMusic = (p) => <Icon {...p} d={<><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></>} />;
+        const MonitorSpeaker = (p) => <Icon {...p} d={<><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></>} />;
+        const Mic2 = (p) => <Icon {...p} d={<><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></>} />;
+        const Download = (p) => <Icon {...p} d={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>} />;
+        const MoreHorizontal = (p) => <Icon {...p} d={<><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></>} />;
+        const Heart = (p) => <Icon {...p} d={<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />} />;
+        const UserIcon = (p) => <Icon {...p} d={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>} />;
+        const SettingsIcon = (p) => <Icon {...p} d={<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></>} />;
 
-        // --- DATA ---
-        const MOCK_TRACKS = [
-            { id: 1, title: "Feu de bois", artist: "Damso", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", duration: "3:45", explicit: true },
-            { id: 2, title: "Macarena", artist: "Damso", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", duration: "3:12", explicit: true },
-            { id: 3, title: "Signaler", artist: "Damso", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", duration: "4:01", explicit: true },
-            { id: 4, title: "J Respect R", artist: "Damso", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", duration: "3:30", explicit: false },
+        // --- NEW ORIGINAL DATA (PRISM) ---
+        const TRACKS = [
+            { id: 1, title: "Neon Skyline", artist: "Luna Echo", image: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", duration: "3:45", explicit: false },
+            { id: 2, title: "Cyber Drift", artist: "Kaelo", image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", duration: "4:12", explicit: true },
+            { id: 3, title: "Ethereal Waves", artist: "Solaris", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", duration: "3:30", explicit: false },
+            { id: 4, title: "Midnight Protocol", artist: "Luna Echo", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", duration: "5:01", explicit: true },
         ];
 
-        const MOCK_PLAYLIST_FR = { id: "fr", title: "FR", author: "nuhi", duration: "9 h 15 m", tracks: MOCK_TRACKS };
+        const ALBUMS = [
+            { id: "a1", title: "Hologram", artist: "Luna Echo", image: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80", tracks: TRACKS },
+            { id: "a2", title: "Deep Void", artist: "Kaelo", image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&q=80", tracks: [TRACKS[1], TRACKS[2]] },
+        ];
 
-        const MOCK_ARTIST = {
-            id: "nono", name: "NONO LA GRINTA", listeners: "4,8 M auditeurs mensuels", image: "https://images.unsplash.com/photo-1501612780327-45045538702b?w=800&q=80",
-            topTracks: [
-                { id: 5, title: "LOVE YOU", artist: "NONO LA GRINTA", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&q=80", plays: "141 749 293" },
-                { id: 6, title: "Paris", artist: "NONO LA GRINTA", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=200&q=80", plays: "156 911 895" },
-                { id: 7, title: "AVEC MOI", artist: "NONO LA GRINTA", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=200&q=80", plays: "73 806 667" }
-            ]
+        const ARTIST_PROFILE = {
+            id: "luna", name: "Luna Echo", listeners: "2,4 M auditeurs", image: "https://images.unsplash.com/photo-1501612780327-45045538702b?w=800&q=80",
+            topTracks: TRACKS.filter(t => t.artist === "Luna Echo")
         };
 
         // --- MAIN APP ---
         function App() {
-            const [currentTab, setCurrentTab] = useState('home');
-            const [currentScreen, setCurrentScreen] = useState('main');
+            const [view, setView] = useState('home'); // home, search, library, profile, artist, album
+            const [previousView, setPreviousView] = useState('home');
             const [selectedItem, setSelectedItem] = useState(null);
             
-            const [currentTrack, setCurrentTrack] = useState(MOCK_TRACKS[0]);
+            // Player State
+            const [currentTrack, setCurrentTrack] = useState(TRACKS[0]);
             const [isPlaying, setIsPlaying] = useState(false);
             const [progress, setProgress] = useState(0);
             const [isPlayerOpen, setIsPlayerOpen] = useState(false);
             
-            // Interaction States
+            // Interactions State
             const [isLiked, setIsLiked] = useState(false);
             const [isShuffle, setIsShuffle] = useState(false);
             const [isRepeat, setIsRepeat] = useState(false);
-            const [isDownloaded, setIsDownloaded] = useState(false);
             
-            // Toast System
-            const [toast, setToast] = useState(null);
-            const showToast = (msg) => {
-                setToast(msg);
-                setTimeout(() => setToast(null), 2500);
-            };
+            // Settings State
+            const [settings, setSettings] = useState({
+                highQuality: true,
+                crossfade: false,
+                canvasAnimations: true
+            });
             
             const audioRef = useRef(null);
 
@@ -217,7 +232,7 @@
             useEffect(() => {
                 if (audioRef.current) {
                     if (isPlaying) {
-                        audioRef.current.play().catch(e => console.log("Play failed", e));
+                        audioRef.current.play().catch(e => console.log("Playback error", e));
                     } else {
                         audioRef.current.pause();
                     }
@@ -242,84 +257,97 @@
             const playTrack = (track) => {
                 setCurrentTrack(track);
                 setIsPlaying(true);
-                setIsLiked(false); // Reset like state on new track
+                setIsLiked(false); // Reset like on track change
             };
 
-            const navigateToPlaylist = (playlist) => { setSelectedItem(playlist); setCurrentScreen('playlist'); };
-            const navigateToArtist = (artist) => { setSelectedItem(artist); setCurrentScreen('artist'); };
-            const goBack = () => { setCurrentScreen('main'); setSelectedItem(null); };
+            const navigateTo = (targetView, item = null) => {
+                setPreviousView(view);
+                setSelectedItem(item);
+                setView(targetView);
+            };
+
+            const goBack = () => {
+                setView(previousView === 'artist' || previousView === 'album' ? 'home' : previousView);
+                setSelectedItem(null);
+            };
+
+            const toggleSetting = (key) => {
+                setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+            };
 
             const renderScreen = () => {
-                if (currentScreen === 'playlist') return <PlaylistScreen playlist={selectedItem} onBack={goBack} onPlay={playTrack} currentTrack={currentTrack} showToast={showToast} />;
-                if (currentScreen === 'artist') return <ArtistScreen artist={selectedItem} onBack={goBack} onPlay={playTrack} showToast={showToast} />;
+                if (view === 'artist') return <ArtistScreen artist={selectedItem} onBack={goBack} onPlay={playTrack} />;
+                if (view === 'album') return <AlbumScreen album={selectedItem} onBack={goBack} onPlay={playTrack} currentTrack={currentTrack} />;
+                if (view === 'profile') return <ProfileScreen settings={settings} toggleSetting={toggleSetting} />;
                 
-                switch(currentTab) {
-                    case 'home': return <HomeScreen onPlaylistClick={navigateToPlaylist} onArtistClick={navigateToArtist} showToast={showToast} />;
-                    case 'search': return <SearchScreen showToast={showToast} />;
-                    case 'library': return <LibraryScreen onPlaylistClick={navigateToPlaylist} showToast={showToast} />;
-                    default: return <HomeScreen onPlaylistClick={navigateToPlaylist} onArtistClick={navigateToArtist} showToast={showToast} />;
+                switch(view) {
+                    case 'home': return <HomeScreen onNavigate={navigateTo} />;
+                    case 'search': return <SearchScreen onNavigate={navigateTo} />;
+                    case 'library': return <LibraryScreen onNavigate={navigateTo} />;
+                    default: return <HomeScreen onNavigate={navigateTo} />;
                 }
             };
 
             return (
-                <div className="flex flex-col h-[100dvh] bg-black text-white relative overflow-hidden">
+                <div className="flex flex-col h-[100dvh] relative overflow-hidden">
                     <audio ref={audioRef} src={currentTrack.audio} onTimeUpdate={handleTimeUpdate} onEnded={() => setIsPlaying(false)} />
 
-                    {/* Global Toast Notification */}
-                    {toast && (
-                        <div className="fixed top-12 left-1/2 transform -translate-x-1/2 z-[100] animate-slide-down">
-                            <div className="glass-extreme px-5 py-2.5 rounded-full text-sm font-semibold shadow-2xl flex items-center space-x-2 border-white/20">
-                                <span className="w-2 h-2 rounded-full bg-[var(--spotify-green)]"></span>
-                                <span>{toast}</span>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative" style={{ paddingBottom: '160px', paddingTop: 'var(--safe-top)' }}>
+                    {/* Main Content Area */}
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative" style={{ paddingBottom: '170px', paddingTop: 'var(--safe-top)' }}>
                         {renderScreen()}
                     </div>
 
-                    <div className="absolute bottom-0 left-0 right-0 z-40 px-3 pb-[var(--safe-bottom)] pt-4">
+                    {/* Bottom UI: Mini Player + Nav */}
+                    <div className="absolute bottom-0 left-0 right-0 z-40 px-3 pb-[var(--safe-bottom)]">
                         {!isPlayerOpen && (
-                            <div onClick={() => setIsPlayerOpen(true)} className="glass-extreme mx-auto max-w-md w-full rounded-2xl p-2.5 mb-3 flex items-center justify-between cursor-pointer active-scale">
+                            <div 
+                                onClick={() => setIsPlayerOpen(true)} 
+                                className="glass-player mx-auto max-w-md w-full rounded-2xl p-3 mb-3 flex items-center justify-between cursor-pointer active-scale animate-slide-up"
+                            >
                                 <div className="flex items-center space-x-3 truncate">
                                     <div className="relative">
-                                        <img src={currentTrack.image} className="w-11 h-11 rounded-lg object-cover shadow-md" alt="cover" />
-                                        {isPlaying && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-black animate-pulse"></div>}
+                                        <img src={currentTrack.image} className="w-12 h-12 rounded-lg object-cover shadow-lg border border-white/10" alt="cover" />
+                                        {isPlaying && <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[var(--accent)] rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_var(--accent)]"></div>}
                                     </div>
                                     <div className="flex flex-col truncate">
-                                        <span className="text-sm font-bold truncate leading-tight">{currentTrack.title}</span>
-                                        <span className="text-xs text-white/60 truncate leading-tight">{currentTrack.artist}</span>
+                                        <span className="text-sm font-bold truncate leading-tight text-white">{currentTrack.title}</span>
+                                        <span className="text-xs text-[var(--text-secondary)] truncate leading-tight">{currentTrack.artist}</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center space-x-3 pr-2">
-                                    <button onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); showToast(isLiked ? "Retiré des titres likés" : "Ajouté aux titres likés"); }} className={`active-scale transition-colors ${isLiked ? 'text-[var(--spotify-green)]' : 'text-white/60'}`}>
+                                <div className="flex items-center space-x-3 pr-1">
+                                    <button onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }} className={`active-scale transition-colors ${isLiked ? 'text-[var(--accent)]' : 'text-white/60'}`}>
                                         <Heart size={20} fill={isLiked ? "currentColor" : "none"} />
                                     </button>
-                                    <button onClick={(e) => { e.stopPropagation(); setIsPlaying(!isPlaying); }} className="text-white active-scale bg-white/10 p-1.5 rounded-full backdrop-blur-md">
-                                        {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+                                    <button onClick={(e) => { e.stopPropagation(); setIsPlaying(!isPlaying); }} className="text-white active-scale bg-white/10 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md">
+                                        {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
                                     </button>
                                 </div>
                             </div>
                         )}
 
-                        <nav className="glass-nav-extreme rounded-[2rem] mx-auto max-w-md w-full flex justify-around items-center h-[68px] px-2">
-                            <NavItem icon={HomeIcon} label="Accueil" active={currentTab === 'home'} onClick={() => { setCurrentTab('home'); goBack(); }} />
-                            <NavItem icon={Search} label="Recherche" active={currentTab === 'search'} onClick={() => { setCurrentTab('search'); goBack(); }} />
-                            <NavItem icon={Library} label="Bibliothèque" active={currentTab === 'library'} onClick={() => { setCurrentTab('library'); goBack(); }} />
-                            <NavItem icon={Plus} label="Créer" onClick={() => showToast("Création de playlist bientôt disponible")} />
+                        <nav className="glass-nav rounded-[2rem] mx-auto max-w-md w-full flex justify-around items-center h-[72px] px-2">
+                            <NavItem icon={HomeIcon} label="Accueil" active={view === 'home'} onClick={() => setView('home')} />
+                            <NavItem icon={Search} label="Recherche" active={view === 'search'} onClick={() => setView('search')} />
+                            <NavItem icon={Library} label="Bibliothèque" active={view === 'library'} onClick={() => setView('library')} />
+                            <NavItem icon={UserIcon} label="Profil" active={view === 'profile'} onClick={() => setView('profile')} />
                         </nav>
                     </div>
 
+                    {/* Full Player Overlay */}
                     {isPlayerOpen && (
                         <FullPlayer 
-                            track={currentTrack} isPlaying={isPlaying} setIsPlaying={setIsPlaying} 
-                            onClose={() => setIsPlayerOpen(false)} progress={progress} handleProgressChange={handleProgressChange}
-                            isLiked={isLiked} toggleLike={() => setIsLiked(!isLiked)} 
-                            isShuffle={isShuffle} toggleShuffle={() => setIsShuffle(!isShuffle)}
-                            isRepeat={isRepeat} toggleRepeat={() => setIsRepeat(!isRepeat)}
-                            isDownloaded={isDownloaded} toggleDownload={() => setIsDownloaded(!isDownloaded)}
-                            showToast={showToast}
+                            track={currentTrack} 
+                            isPlaying={isPlaying} 
+                            setIsPlaying={setIsPlaying} 
+                            onClose={() => setIsPlayerOpen(false)} 
+                            progress={progress} 
+                            handleProgressChange={handleProgressChange}
+                            isLiked={isLiked} 
+                            toggleLike={() => setIsLiked(!isLiked)} 
+                            isShuffle={isShuffle} 
+                            toggleShuffle={() => setIsShuffle(!isShuffle)}
+                            isRepeat={isRepeat} 
+                            toggleRepeat={() => setIsRepeat(!isRepeat)}
                         />
                     )}
                 </div>
@@ -328,69 +356,60 @@
 
         // --- SCREENS ---
 
-        function HomeScreen({ onPlaylistClick, onArtistClick, showToast }) {
+        function HomeScreen({ onNavigate }) {
             return (
-                <div className="animate-fade-in pb-10">
-                    <header className="px-5 pt-4 pb-6 flex justify-between items-center sticky top-0 z-30 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-md">
-                        <h1 className="text-3xl font-bold tracking-tight">Home</h1>
-                        <div className="flex items-center space-x-2">
-                            <button onClick={() => showToast("Menu des paramètres")} className="w-10 h-10 rounded-full glass-extreme flex items-center justify-center active-scale">
-                                <Menu size={20} className="text-white" />
-                            </button>
-                            <button onClick={() => showToast("Profil utilisateur")} className="w-10 h-10 rounded-full glass-extreme flex items-center justify-center active-scale">
-                                <UserIcon size={20} className="text-white" />
-                            </button>
-                        </div>
+                <div className="animate-fade-in pb-10 px-5 pt-4">
+                    <header className="flex justify-between items-center mb-8">
+                        <h1 className="text-4xl font-display font-extrabold tracking-tight text-white drop-shadow-lg">Prism</h1>
+                        <button className="glass w-10 h-10 rounded-full flex items-center justify-center active-scale">
+                            <Menu size={20} className="text-white" />
+                        </button>
                     </header>
 
-                    <section className="px-5 mb-8">
-                        <div className="flex space-x-4 horizontal-scroll pb-4 -mx-5 px-5">
-                            <div onClick={() => onArtistClick(MOCK_ARTIST)} className="min-w-[150px] w-[150px] cursor-pointer group">
-                                <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-2xl">
-                                    <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&q=80" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" alt="EP" />
-                                </div>
-                                <p className="text-sm font-bold truncate">EP</p>
-                                <p className="text-xs text-white/50 truncate">teenage dream</p>
-                            </div>
-                            <div onClick={() => onPlaylistClick(MOCK_PLAYLIST_FR)} className="min-w-[150px] w-[150px] cursor-pointer group">
-                                <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-2xl">
-                                    <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" alt="Playlist" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-3">
-                                        <h3 className="text-white font-black text-xl leading-none tracking-tighter uppercase">RAP FR</h3>
-                                    </div>
-                                </div>
-                                <p className="text-sm font-bold truncate">Playlist Rap FR</p>
-                                <p className="text-xs text-white/50 truncate">Les classiques</p>
-                            </div>
-                            <div className="min-w-[150px] w-[150px]">
-                                <div className="w-full aspect-square rounded-xl glass-extreme flex items-center justify-center mb-2 cursor-pointer active-scale" onClick={() => showToast("Découvrir de nouveaux sons")}>
-                                    <Plus size={40} className="text-white/40" />
-                                </div>
+                    {/* Hero Section */}
+                    <section className="mb-10">
+                        <div className="glass rounded-2xl p-5 relative overflow-hidden flex flex-col justify-end min-h-[160px]">
+                            <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=800&q=80" className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-overlay" alt="Hero" />
+                            <div className="relative z-10">
+                                <span className="text-[10px] font-bold tracking-widest uppercase text-[var(--accent)] mb-1 block">Nouvelle sortie</span>
+                                <h2 className="text-2xl font-bold text-white mb-2 leading-tight">Hologram<br/>by Luna Echo</h2>
+                                <button onClick={() => onNavigate('artist', ARTIST_PROFILE)} className="bg-white text-black px-5 py-2 rounded-full text-sm font-bold active-scale shadow-lg">
+                                    Écouter
+                                </button>
                             </div>
                         </div>
                     </section>
 
-                    <section className="px-5 mb-8">
-                        <div className="grid grid-cols-2 gap-2">
-                            {[
-                                { title: "Nouméa", bg: "bg-[#3e3e3e]", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=100&q=80" },
-                                { title: "Titres likés", bg: "bg-gradient-to-br from-indigo-600 to-purple-800", img: "heart" },
-                                { title: "Alex G", bg: "bg-[#5a3a22]", img: "https://images.unsplash.com/photo-1501612780327-45045538702b?w=100&q=80" },
-                                { title: "a6el", bg: "bg-[#4a2e1e]", img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&q=80" },
-                                { title: "Mix 1", bg: "bg-[#3d1a14]", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&q=80" },
-                                { title: "Theodora", bg: "bg-[#2a1b54]", img: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=100&q=80" },
-                                { title: "FR", bg: "bg-[#2a2a2a]", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=100&q=80" },
-                                { title: "KYKY", bg: "bg-[#2d2d2d]", img: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&q=80" },
-                            ].map((item, i) => (
-                                <div key={i} onClick={() => item.title === "FR" ? onPlaylistClick(MOCK_PLAYLIST_FR) : showToast(`Ouverture de : ${item.title}`)} className={`${item.bg} flex items-center rounded-lg overflow-hidden h-14 active-scale cursor-pointer relative shadow-lg border border-white/5`}>
-                                    {item.img === "heart" ? (
-                                        <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-white flex items-center justify-center shrink-0">
-                                            <Heart size={20} fill="white" stroke="white" />
+                    {/* Horizontal Scroll */}
+                    <section className="mb-10">
+                        <h3 className="text-xl font-bold mb-4 tracking-tight">Pour vous</h3>
+                        <div className="flex space-x-4 horizontal-scroll pb-4 -mx-5 px-5">
+                            {ALBUMS.map(album => (
+                                <div key={album.id} onClick={() => onNavigate('album', album)} className="min-w-[150px] w-[150px] cursor-pointer group">
+                                    <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-3 shadow-2xl border border-white/5">
+                                        <img src={album.image} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" alt={album.title} />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                            <Play size={24} fill="white" className="text-white" />
                                         </div>
-                                    ) : (
-                                        <img src={item.img} className="w-14 h-14 object-cover shrink-0" alt={item.title} />
-                                    )}
-                                    <span className="text-xs font-bold px-2 line-clamp-2">{item.title}</span>
+                                    </div>
+                                    <p className="text-sm font-bold truncate text-white">{album.title}</p>
+                                    <p className="text-xs text-[var(--text-secondary)] truncate mt-0.5">{album.artist}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Grid */}
+                    <section>
+                        <h3 className="text-xl font-bold mb-4 tracking-tight">Mix Prism</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                            {TRACKS.map(track => (
+                                <div key={track.id} className="glass rounded-xl p-3 flex items-center space-x-3 active-scale cursor-pointer" onClick={() => onNavigate('album', ALBUMS[0])}>
+                                    <img src={track.image} className="w-10 h-10 rounded-md object-cover" alt="" />
+                                    <div className="truncate">
+                                        <p className="text-xs font-bold truncate">{track.title}</p>
+                                        <p className="text-[10px] text-[var(--text-secondary)] truncate">{track.artist}</p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -399,174 +418,216 @@
             );
         }
 
-        function SearchScreen({ showToast }) {
+        function SearchScreen({ onNavigate }) {
+            const [query, setQuery] = useState('');
+            
+            const filteredTracks = TRACKS.filter(t => t.title.toLowerCase().includes(query.toLowerCase()) || t.artist.toLowerCase().includes(query.toLowerCase()));
+            const filteredAlbums = ALBUMS.filter(a => a.title.toLowerCase().includes(query.toLowerCase()));
+
             const categories = [
-                { title: "Musique", color: "bg-[#e13300]", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&q=80" },
-                { title: "Podcasts", color: "bg-[#006450]", img: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&q=80" },
-                { title: "Livres audio", color: "bg-[#1e3264]", img: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&q=80" },
-                { title: "Événements live", color: "bg-[#7358ff]", img: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=200&q=80" },
-                { title: "Pour vous", color: "bg-[#8d67ab]", img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&q=80" },
-                { title: "Sorties", color: "bg-[#1e6a4b]", img: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=200&q=80" },
-                { title: "Hip-Hop", color: "bg-[#777777]", img: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=200&q=80" },
-                { title: "Pop", color: "bg-[#148a08]", img: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200&q=80" },
+                { title: "Électronique", color: "from-purple-600 to-indigo-900", img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=200&q=80" },
+                { title: "Ambient", color: "from-cyan-600 to-blue-900", img: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=200&q=80" },
+                { title: "Synthwave", color: "from-pink-600 to-purple-900", img: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=200&q=80" },
+                { title: "Focus", color: "from-emerald-600 to-teal-900", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&q=80" },
             ];
 
             return (
                 <div className="animate-fade-in px-5 pt-4 pb-10">
-                    <header className="flex justify-between items-center mb-6">
-                        <h1 className="text-3xl font-bold tracking-tight">Rechercher</h1>
-                    </header>
+                    <h1 className="text-4xl font-display font-extrabold tracking-tight mb-6 text-white drop-shadow-lg">Découvrir</h1>
 
-                    <div className="relative mb-6">
-                        <Search size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black" />
+                    <div className="relative mb-8">
+                        <Search size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/50" />
                         <input 
                             type="text" 
-                            placeholder="Que souhaitez-vous écouter ?" 
-                            className="w-full bg-white text-black rounded-xl py-3.5 pl-12 pr-4 text-sm font-bold placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-white/20 transition-all shadow-lg"
-                            onKeyDown={(e) => { if(e.key === 'Enter') showToast(`Recherche : ${e.target.value}`); }}
+                            placeholder="Artistes, titres, albums..." 
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            className="glass w-full rounded-2xl py-4 pl-12 pr-4 text-sm font-medium placeholder-white/50 text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all"
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        {categories.map((cat, i) => (
-                            <div key={i} onClick={() => showToast(`Explorer : ${cat.title}`)} className={`${cat.color} relative rounded-xl overflow-hidden aspect-[16/9] p-3 cursor-pointer active-scale shadow-lg`}>
-                                <h2 className="text-white font-bold text-lg leading-tight w-2/3 z-10 relative text-shadow">{cat.title}</h2>
-                                <img src={cat.img} className="absolute -right-4 -bottom-2 w-20 h-20 object-cover rotate-[25deg] shadow-2xl rounded-sm" alt={cat.title} />
-                            </div>
-                        ))}
-                    </div>
+                    {query.length > 0 ? (
+                        <div className="space-y-6">
+                            {filteredTracks.length > 0 && (
+                                <div>
+                                    <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Titres</h3>
+                                    {filteredTracks.map(track => (
+                                        <div key={track.id} className="flex items-center space-x-3 mb-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer" onClick={() => onNavigate('album', ALBUMS[0])}>
+                                            <img src={track.image} className="w-12 h-12 rounded-md object-cover" alt="" />
+                                            <div>
+                                                <p className="text-sm font-bold">{track.title}</p>
+                                                <p className="text-xs text-[var(--text-secondary)]">{track.artist}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {filteredAlbums.length > 0 && (
+                                <div>
+                                    <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Albums</h3>
+                                    {filteredAlbums.map(album => (
+                                        <div key={album.id} className="flex items-center space-x-3 mb-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer" onClick={() => onNavigate('album', album)}>
+                                            <img src={album.image} className="w-12 h-12 rounded-md object-cover" alt="" />
+                                            <div>
+                                                <p className="text-sm font-bold">{album.title}</p>
+                                                <p className="text-xs text-[var(--text-secondary)]">{album.artist}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {filteredTracks.length === 0 && filteredAlbums.length === 0 && (
+                                <p className="text-center text-white/50 mt-10">Aucun résultat pour "{query}"</p>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-4">
+                            {categories.map((cat, i) => (
+                                <div key={i} className={`relative rounded-2xl overflow-hidden aspect-square p-4 cursor-pointer active-scale bg-gradient-to-br ${cat.color} shadow-xl border border-white/10 group`}>
+                                    <h2 className="text-white font-bold text-lg leading-tight relative z-10">{cat.title}</h2>
+                                    <img src={cat.img} className="absolute -right-4 -bottom-4 w-24 h-24 object-cover rotate-12 shadow-2xl rounded-lg group-hover:scale-110 transition-transform" alt={cat.title} />
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             );
         }
 
-        function LibraryScreen({ onPlaylistClick, showToast }) {
-            const [activeFilter, setActiveFilter] = useState('Playlists');
-
+        function LibraryScreen({ onNavigate }) {
             return (
                 <div className="animate-fade-in px-5 pt-4 pb-10">
-                    <header className="flex justify-between items-center mb-6">
-                        <h1 className="text-3xl font-bold tracking-tight">Bibliothèque</h1>
+                    <header className="flex justify-between items-center mb-8">
+                        <h1 className="text-4xl font-display font-extrabold tracking-tight text-white drop-shadow-lg">Ma Collection</h1>
+                        <button className="glass w-10 h-10 rounded-full flex items-center justify-center active-scale">
+                            <Plus size={20} className="text-white" />
+                        </button>
                     </header>
                     
-                    <div className="flex space-x-2 mb-6 overflow-x-auto">
-                        {['Playlists', 'Artistes', 'Albums'].map(filter => (
-                            <button 
-                                key={filter}
-                                onClick={() => setActiveFilter(filter)}
-                                className={`px-4 py-1.5 text-sm font-bold rounded-full whitespace-nowrap transition-colors ${activeFilter === filter ? 'bg-[var(--spotify-green)] text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                            >
-                                {filter}
-                            </button>
-                        ))}
+                    <div className="space-y-4">
+                        <div onClick={() => onNavigate('album', ALBUMS[0])} className="glass rounded-xl p-3 flex items-center space-x-4 cursor-pointer active-scale">
+                            <img src={ALBUMS[0].image} className="w-16 h-16 rounded-lg object-cover shadow-lg" alt="" />
+                            <div>
+                                <h3 className="text-base font-bold text-white">Titres likés</h3>
+                                <p className="text-sm text-[var(--text-secondary)]">Playlist • 124 titres</p>
+                            </div>
+                        </div>
+                        <div onClick={() => onNavigate('album', ALBUMS[1])} className="glass rounded-xl p-3 flex items-center space-x-4 cursor-pointer active-scale">
+                            <img src={ALBUMS[1].image} className="w-16 h-16 rounded-lg object-cover shadow-lg" alt="" />
+                            <div>
+                                <h3 className="text-base font-bold text-white">Deep Void</h3>
+                                <p className="text-sm text-[var(--text-secondary)]">Album • Kaelo</p>
+                            </div>
+                        </div>
+                        <div className="glass rounded-xl p-3 flex items-center space-x-4 cursor-pointer active-scale">
+                            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-600 to-cyan-600 flex items-center justify-center shadow-lg">
+                                <Download size={24} className="text-white" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-bold text-white">Téléchargements</h3>
+                                <p className="text-sm text-[var(--text-secondary)]">12 titres disponibles hors ligne</p>
+                            </div>
+                        </div>
                     </div>
-
-                    {activeFilter === 'Playlists' && (
-                        <div className="space-y-4">
-                            <div className="flex items-center space-x-4 cursor-pointer active-scale group" onClick={() => onPlaylistClick(MOCK_PLAYLIST_FR)}>
-                                <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 shadow-xl border border-white/10">
-                                    <div className="grid grid-cols-2 grid-rows-2 w-full h-full">
-                                        <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=100&q=80" className="object-cover w-full h-full" alt="Cover 1"/>
-                                        <img src="https://images.unsplash.com/photo-1501612780327-45045538702b?w=100&q=80" className="object-cover w-full h-full" alt="Cover 2"/>
-                                        <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&q=80" className="object-cover w-full h-full" alt="Cover 3"/>
-                                        <img src="https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=100&q=80" className="object-cover w-full h-full" alt="Cover 4"/>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p className="text-white font-bold text-base group-hover:text-[var(--spotify-green)] transition-colors">FR</p>
-                                    <p className="text-white/50 text-sm">Playlist • nuhi</p>
-                                </div>
-                            </div>
-
-                            <div onClick={() => showToast("Ouverture des titres likés")} className="flex items-center space-x-4 cursor-pointer active-scale group">
-                                <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 shadow-xl bg-gradient-to-br from-indigo-500 to-purple-800 flex items-center justify-center border border-white/10">
-                                    <Heart size={28} fill="white" className="text-white" />
-                                </div>
-                                <div>
-                                    <p className="text-white font-bold text-base group-hover:text-[var(--spotify-green)] transition-colors">Titres likés</p>
-                                    <p className="text-white/50 text-sm">Playlist • Vous</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {activeFilter !== 'Playlists' && (
-                        <div className="text-center text-white/40 py-10">
-                            Aucun {activeFilter.toLowerCase()} trouvé.
-                        </div>
-                    )}
                 </div>
             );
         }
 
-        function PlaylistScreen({ playlist, onBack, onPlay, currentTrack, showToast }) {
+        function ProfileScreen({ settings, toggleSetting }) {
             return (
-                <div className="animate-fade-in pb-10">
-                    <div className="relative w-full aspect-[4/3] max-h-[350px] overflow-hidden">
-                        <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
-                            <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80" className="object-cover w-full h-full" alt="Mosaic 1"/>
-                            <img src="https://images.unsplash.com/photo-1501612780327-45045538702b?w=500&q=80" className="object-cover w-full h-full" alt="Mosaic 2"/>
-                            <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80" className="object-cover w-full h-full" alt="Mosaic 3"/>
-                            <img src="https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=500&q=80" className="object-cover w-full h-full" alt="Mosaic 4"/>
+                <div className="animate-fade-in px-5 pt-4 pb-10">
+                    <header className="flex flex-col items-center justify-center mb-10 pt-6">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-700 to-black border-2 border-white/20 flex items-center justify-center mb-4 shadow-2xl">
+                            <UserIcon size={40} className="text-white/50" />
+                        </div>
+                        <h1 className="text-2xl font-display font-bold text-white">Utilisateur Prism</h1>
+                        <p className="text-sm text-[var(--text-secondary)] mt-1">Membre Premium</p>
+                    </header>
+
+                    <div className="glass rounded-2xl overflow-hidden divide-y divide-white/5">
+                        <div className="p-4 flex items-center justify-between cursor-pointer" onClick={() => toggleSetting('highQuality')}>
+                            <div>
+                                <h3 className="text-sm font-bold text-white">Qualité Audio Élevée</h3>
+                                <p className="text-xs text-[var(--text-secondary)] mt-0.5">Streaming jusqu'à 320kbps</p>
+                            </div>
+                            <div className={`w-12 h-6 rounded-full p-1 transition-colors ${settings.highQuality ? 'bg-[var(--accent)]' : 'bg-white/20'}`}>
+                                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${settings.highQuality ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                            </div>
                         </div>
                         
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[#121212]"></div>
-
-                        <div className="absolute top-4 left-4 right-4 flex justify-between z-10 pt-[var(--safe-top)]">
-                            <button onClick={onBack} className="w-10 h-10 rounded-full glass-extreme flex items-center justify-center active-scale text-white">
-                                <ChevronLeft size={24} />
-                            </button>
-                            <button onClick={() => showToast("Options de la playlist")} className="w-10 h-10 rounded-full glass-extreme flex items-center justify-center active-scale text-white">
-                                <MoreHorizontal size={24} />
-                            </button>
+                        <div className="p-4 flex items-center justify-between cursor-pointer" onClick={() => toggleSetting('crossfade')}>
+                            <div>
+                                <h3 className="text-sm font-bold text-white">Fondu Enchaîné</h3>
+                                <p className="text-xs text-[var(--text-secondary)] mt-0.5">Transitions douces entre les titres</p>
+                            </div>
+                            <div className={`w-12 h-6 rounded-full p-1 transition-colors ${settings.crossfade ? 'bg-[var(--accent)]' : 'bg-white/20'}`}>
+                                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${settings.crossfade ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                            </div>
                         </div>
 
-                        <div className="absolute bottom-4 left-4 right-4 z-10">
-                            <h1 className="text-5xl font-black mb-2 text-shadow">{playlist.title}</h1>
-                            <div className="flex items-center space-x-2 text-sm text-white/90 font-medium text-shadow">
-                                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-[10px] text-black font-bold">N</div>
-                                <span>{playlist.author}</span>
+                        <div className="p-4 flex items-center justify-between cursor-pointer" onClick={() => toggleSetting('canvasAnimations')}>
+                            <div>
+                                <h3 className="text-sm font-bold text-white">Animations Canvas</h3>
+                                <p className="text-xs text-[var(--text-secondary)] mt-0.5">Visuels animés pendant la lecture</p>
+                            </div>
+                            <div className={`w-12 h-6 rounded-full p-1 transition-colors ${settings.canvasAnimations ? 'bg-[var(--accent)]' : 'bg-white/20'}`}>
+                                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${settings.canvasAnimations ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function AlbumScreen({ album, onBack, onPlay, currentTrack }) {
+            return (
+                <div className="animate-fade-in pb-10">
+                    <div className="relative w-full aspect-square max-h-[400px] overflow-hidden">
+                        <img src={album.image} className="w-full h-full object-cover" alt={album.title} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent"></div>
+                        
+                        <button onClick={onBack} className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center active-scale text-white">
+                            <ChevronLeft size={24} />
+                        </button>
+
+                        <div className="absolute bottom-0 left-0 w-full px-5 pb-6">
+                            <span className="text-[10px] font-bold tracking-widest uppercase text-[var(--accent)] mb-1 block">Album</span>
+                            <h1 className="text-4xl font-display font-extrabold mb-2 text-white text-shadow">{album.title}</h1>
+                            <div className="flex items-center space-x-2 text-sm text-white/80 font-medium">
+                                <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">P</span>
+                                <span>{album.artist}</span>
                                 <span>•</span>
-                                <span>{playlist.duration}</span>
+                                <span>{album.tracks.length} titres</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="px-5 py-6 flex items-center justify-between">
-                        <button onClick={() => showToast("Mode aléatoire activé")} className="text-white/60 hover:text-white transition-colors active-scale">
-                            <Shuffle size={24} />
-                        </button>
-                        <button onClick={() => onPlay(playlist.tracks[0])} className="w-16 h-16 bg-[var(--spotify-green)] rounded-full flex items-center justify-center text-black active-scale shadow-[0_0_30px_rgba(30,215,96,0.4)]">
+                        <button onClick={() => onPlay(album.tracks[0])} className="w-16 h-16 bg-[var(--accent)] rounded-full flex items-center justify-center text-black active-scale shadow-[0_0_30px_var(--accent-glow)]">
                             <Play size={32} fill="currentColor" className="ml-1" />
                         </button>
-                        <button onClick={() => showToast("Téléchargement démarré")} className="text-white/60 hover:text-white transition-colors active-scale">
-                            <Download size={24} />
-                        </button>
+                        <div className="flex space-x-4 text-white/60">
+                            <button className="active-scale hover:text-white transition-colors"><Heart size={24} /></button>
+                            <button className="active-scale hover:text-white transition-colors"><Download size={24} /></button>
+                        </div>
                     </div>
 
                     <div className="px-5">
-                        {playlist.tracks.map((track, i) => {
+                        {album.tracks.map((track, i) => {
                             const isActive = currentTrack.id === track.id;
                             return (
-                                <div key={track.id} onClick={() => onPlay(track)} className="flex items-center py-2 group cursor-pointer active:bg-white/5 rounded-xl px-2 -mx-2 transition-colors">
-                                    <div className="w-8 text-center text-white/40 text-sm font-bold group-hover:hidden">
-                                        {isActive ? <span className="text-[var(--spotify-green)]">▶</span> : i + 1}
+                                <div key={track.id} onClick={() => onPlay(track)} className={`flex items-center py-3 group cursor-pointer rounded-xl px-3 -mx-3 transition-colors ${isActive ? 'bg-white/5' : 'hover:bg-white/5'}`}>
+                                    <div className="w-6 text-center text-sm font-bold text-white/40">
+                                        {isActive ? <span className="text-[var(--accent)] text-xs">▶</span> : i + 1}
                                     </div>
-                                    <div className="hidden group-hover:flex w-8 justify-center">
-                                        <Play size={16} fill="white" className="text-white" />
-                                    </div>
-                                    
-                                    <img src={track.image} className="w-11 h-11 rounded-md object-cover mx-3 shadow-md" alt="cover" />
-                                    
-                                    <div className="flex-1 min-w-0 pr-2">
-                                        <p className={`text-base truncate font-bold ${isActive ? 'text-[var(--spotify-green)]' : 'text-white'}`}>{track.title}</p>
+                                    <div className="flex-1 min-w-0 ml-3">
+                                        <p className={`text-base truncate font-bold ${isActive ? 'text-[var(--accent)]' : 'text-white'}`}>{track.title}</p>
                                         <div className="flex items-center space-x-1.5 mt-0.5">
                                             {track.explicit && <span className="bg-white/20 text-white text-[9px] font-black px-1 rounded-sm">E</span>}
                                             <p className="text-sm text-white/50 truncate">{track.artist}</p>
                                         </div>
                                     </div>
-                                    <button onClick={(e) => { e.stopPropagation(); showToast("Options du titre"); }} className="p-2">
-                                        <MoreHorizontal size={20} className="text-white/40" />
-                                    </button>
+                                    <button className="p-2 text-white/40"><MoreHorizontal size={20} /></button>
                                 </div>
                             );
                         })}
@@ -575,54 +636,41 @@
             );
         }
 
-        function ArtistScreen({ artist, onBack, onPlay, showToast }) {
+        function ArtistScreen({ artist, onBack, onPlay }) {
             return (
                 <div className="animate-fade-in pb-10">
-                    <div className="relative w-full h-[400px]">
-                        <img src={artist.image} className="w-full h-full object-cover object-top" alt={artist.name} />
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-[#121212]"></div>
+                    <div className="relative w-full h-[350px]">
+                        <img src={artist.image} className="w-full h-full object-cover object-center" alt={artist.name} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent"></div>
                         
-                        <div className="absolute top-4 left-4 right-4 flex justify-between z-10 pt-[var(--safe-top)]">
-                            <button onClick={onBack} className="w-10 h-10 rounded-full glass-extreme flex items-center justify-center active-scale text-white">
-                                <ChevronLeft size={24} />
-                            </button>
-                            <button onClick={() => showToast("Options de l'artiste")} className="w-10 h-10 rounded-full glass-extreme flex items-center justify-center active-scale text-white">
-                                <MoreHorizontal size={24} />
-                            </button>
-                        </div>
+                        <button onClick={onBack} className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center active-scale text-white">
+                            <ChevronLeft size={24} />
+                        </button>
 
-                        <div className="absolute bottom-0 left-0 w-full px-5 pb-6 bg-gradient-to-t from-[#121212] via-[#121212]/80 to-transparent pt-10">
-                            <h1 className="text-5xl font-black mb-1 text-shadow uppercase leading-none" style={{fontFamily: 'Impact, sans-serif', letterSpacing: '-0.02em', transform: 'scaleY(1.1)', transformOrigin: 'bottom'}}>{artist.name}</h1>
-                            <p className="text-white/80 text-sm font-medium mt-4">{artist.listeners}</p>
+                        <div className="absolute bottom-0 left-0 w-full px-5 pb-6">
+                            <h1 className="text-5xl font-display font-black mb-2 text-white text-shadow leading-none">{artist.name}</h1>
+                            <p className="text-white/70 text-sm font-medium">{artist.listeners}</p>
                         </div>
                     </div>
 
                     <div className="px-5 py-6 flex items-center space-x-6">
-                        <button onClick={() => showToast("Mode aléatoire activé")} className="text-white/60 hover:text-white transition-colors active-scale">
-                            <Shuffle size={24} />
-                        </button>
-                        <button onClick={() => onPlay(artist.topTracks[0])} className="w-16 h-16 bg-[var(--spotify-green)] rounded-full flex items-center justify-center text-black active-scale shadow-[0_0_30px_rgba(30,215,96,0.4)]">
+                        <button onClick={() => onPlay(artist.topTracks[0])} className="w-16 h-16 bg-[var(--accent)] rounded-full flex items-center justify-center text-black active-scale shadow-[0_0_30px_var(--accent-glow)]">
                             <Play size={32} fill="currentColor" className="ml-1" />
                         </button>
-                        <button onClick={() => showToast("Vous suivez maintenant l'artiste")} className="px-5 py-2 border border-white/30 rounded-full text-sm font-bold active-scale hover:border-white transition-colors">Suivre</button>
+                        <button className="px-6 py-2 border border-white/30 rounded-full text-sm font-bold active-scale hover:border-white transition-colors">Suivre</button>
                     </div>
 
                     <div className="px-5">
-                        <h2 className="text-xl font-bold mb-4 tracking-tight">Titres les plus écoutés</h2>
+                        <h2 className="text-xl font-bold mb-4 tracking-tight">Populaires</h2>
                         {artist.topTracks.map((track, i) => (
-                            <div key={track.id} onClick={() => onPlay(track)} className="flex items-center py-3 group cursor-pointer active:bg-white/5 rounded-xl px-2 -mx-2 transition-colors">
-                                <div className="w-8 text-center text-white/40 text-sm font-bold">{i + 1}</div>
+                            <div key={track.id} onClick={() => onPlay(track)} className="flex items-center py-3 group cursor-pointer rounded-xl px-3 -mx-3 hover:bg-white/5 transition-colors">
+                                <div className="w-6 text-center text-sm font-bold text-white/40">{i + 1}</div>
                                 <img src={track.image} className="w-12 h-12 rounded-md object-cover mx-3 shadow-md" alt="cover" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-base text-white truncate font-bold">{track.title}</p>
-                                    <div className="flex items-center space-x-2 mt-0.5">
-                                        <span className="bg-white/20 text-white text-[9px] font-black px-1 rounded-sm">E</span>
-                                        <p className="text-sm text-white/50 font-mono">{track.plays}</p>
-                                    </div>
+                                    <p className="text-sm text-white/50 font-mono mt-0.5">124 593 021</p>
                                 </div>
-                                <button onClick={(e) => { e.stopPropagation(); showToast("Options du titre"); }} className="p-2">
-                                    <MoreHorizontal size={20} className="text-white/40" />
-                                </button>
+                                <button className="p-2 text-white/40"><MoreHorizontal size={20} /></button>
                             </div>
                         ))}
                     </div>
@@ -630,84 +678,94 @@
             );
         }
 
-        function FullPlayer({ track, isPlaying, setIsPlaying, onClose, progress, handleProgressChange, isLiked, toggleLike, isShuffle, toggleShuffle, isRepeat, toggleRepeat, isDownloaded, toggleDownload, showToast }) {
+        function FullPlayer({ track, isPlaying, setIsPlaying, onClose, progress, handleProgressChange, isLiked, toggleLike, isShuffle, toggleShuffle, isRepeat, toggleRepeat }) {
             return (
                 <div className="fixed inset-0 z-50 flex flex-col animate-slide-up bg-black">
-                    <div className="absolute inset-0 overflow-hidden opacity-40">
-                        <img src={track.image} className="w-full h-full object-cover blur-[100px] scale-150 saturate-[200%]" alt="bg" />
-                        <div className="absolute inset-0 bg-black/60"></div>
+                    {/* Immersive Background */}
+                    <div className="absolute inset-0 overflow-hidden">
+                        <img src={track.image} className="w-full h-full object-cover blur-[120px] scale-[2] opacity-50 saturate-[200%]" alt="bg" />
+                        <div className="absolute inset-0 bg-black/40"></div>
                     </div>
 
                     <div className="relative z-10 flex flex-col h-full px-6 pb-[var(--safe-bottom)] pt-[var(--safe-top)]">
+                        {/* Header */}
                         <div className="flex justify-between items-center py-4">
-                            <button onClick={onClose} className="w-10 h-10 rounded-full glass-extreme flex items-center justify-center active-scale text-white">
+                            <button onClick={onClose} className="w-10 h-10 rounded-full glass flex items-center justify-center active-scale text-white">
                                 <ChevronDown size={28} />
                             </button>
-                            <span className="text-xs font-bold tracking-widest uppercase text-white/60">Lecture en cours</span>
-                            <button onClick={() => showToast("Options de lecture")} className="w-10 h-10 rounded-full glass-extreme flex items-center justify-center active-scale text-white">
+                            <span className="text-[10px] font-bold tracking-widest uppercase text-white/60">En cours de lecture</span>
+                            <button className="w-10 h-10 rounded-full glass flex items-center justify-center active-scale text-white">
                                 <MoreHorizontal size={24} />
                             </button>
                         </div>
 
+                        {/* Artwork */}
                         <div className="flex-1 flex items-center justify-center py-6">
-                            <div className="w-full aspect-square max-w-[340px] rounded-2xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8)] border border-white/10">
-                                <img src={track.image} className="w-full h-full object-cover" alt={track.title} />
+                            <div className="w-full aspect-square max-w-[320px] rounded-2xl overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.9)] border border-white/10 relative group">
+                                <img src={track.image} className={`w-full h-full object-cover transition-transform duration-1000 ${isPlaying ? 'scale-105' : 'scale-100'}`} alt={track.title} />
                             </div>
                         </div>
 
+                        {/* Track Info & Progress */}
                         <div className="mb-6">
-                            <div className="flex justify-between items-center mb-4">
+                            <div className="flex justify-between items-end mb-4">
                                 <div className="min-w-0 pr-4">
-                                    <h1 className="text-2xl font-bold truncate text-white">{track.title}</h1>
-                                    <p className="text-lg text-white/60 truncate">{track.artist}</p>
+                                    <h1 className="text-2xl font-display font-bold truncate text-white">{track.title}</h1>
+                                    <p className="text-lg text-white/60 truncate mt-1">{track.artist}</p>
                                 </div>
-                                <button onClick={() => { toggleLike(); showToast(isLiked ? "Retiré des titres likés" : "Ajouté aux titres likés"); }} className={`active-scale shrink-0 transition-colors ${isLiked ? 'text-[var(--spotify-green)]' : 'text-white/60'}`}>
-                                    <Heart size={30} fill={isLiked ? "currentColor" : "none"} />
+                                <button onClick={toggleLike} className={`active-scale shrink-0 transition-colors p-2 ${isLiked ? 'text-[var(--accent)]' : 'text-white/60'}`}>
+                                    <Heart size={32} fill={isLiked ? "currentColor" : "none"} />
                                 </button>
                             </div>
                             
                             <div className="flex items-center space-x-3 text-xs text-white/50 font-mono mb-1">
                                 <span className="w-8">{Math.floor((progress / 100) * (225)) ? `${Math.floor(((progress / 100) * 225) / 60)}:${Math.floor(((progress / 100) * 225) % 60).toString().padStart(2, '0')}` : '0:00'}</span>
                                 <div className="flex-1 flex items-center">
-                                    <input type="range" min="0" max="100" value={progress} onChange={handleProgressChange} className="w-full h-1 appearance-none bg-white/20 rounded-full outline-none" style={{ background: `linear-gradient(to right, var(--spotify-green) ${progress}%, rgba(255,255,255,0.2) ${progress}%)` }} />
+                                    <input 
+                                        type="range" min="0" max="100" value={progress} onChange={handleProgressChange} 
+                                        className="w-full h-1 appearance-none rounded-full outline-none" 
+                                        style={{ background: `linear-gradient(to right, var(--accent) ${progress}%, rgba(255,255,255,0.2) ${progress}%)` }} 
+                                    />
                                 </div>
                                 <span className="w-8 text-right">{track.duration}</span>
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center mb-8 px-2">
-                            <button onClick={() => { toggleShuffle(); showToast(isShuffle ? "Aléatoire désactivé" : "Aléatoire activé"); }} className={`active-scale transition-colors ${isShuffle ? 'text-[var(--spotify-green)]' : 'text-white/60'}`}>
+                        {/* Controls */}
+                        <div className="flex justify-between items-center mb-10 px-2">
+                            <button onClick={toggleShuffle} className={`active-scale transition-colors p-2 ${isShuffle ? 'text-[var(--accent)]' : 'text-white/60'}`}>
                                 <Shuffle size={24} />
                             </button>
-                            <button onClick={() => showToast("Titre précédent")} className="text-white active-scale">
+                            <button className="text-white active-scale p-2">
                                 <SkipBack size={36} fill="currentColor" />
                             </button>
-                            <button onClick={() => setIsPlaying(!isPlaying)} className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-black active-scale shadow-[0_0_40px_rgba(255,255,255,0.3)]">
+                            <button onClick={() => setIsPlaying(!isPlaying)} className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-black active-scale shadow-[0_0_40px_rgba(255,255,255,0.4)]">
                                 {isPlaying ? <Pause size={36} fill="currentColor" /> : <Play size={36} fill="currentColor" className="ml-2" />}
                             </button>
-                            <button onClick={() => showToast("Titre suivant")} className="text-white active-scale">
+                            <button className="text-white active-scale p-2">
                                 <SkipForward size={36} fill="currentColor" />
                             </button>
-                            <button onClick={() => { toggleRepeat(); showToast(isRepeat ? "Répétition désactivée" : "Répétition activée"); }} className={`active-scale transition-colors ${isRepeat ? 'text-[var(--spotify-green)]' : 'text-white/60'}`}>
+                            <button onClick={toggleRepeat} className={`active-scale transition-colors p-2 ${isRepeat ? 'text-[var(--accent)]' : 'text-white/60'}`}>
                                 <Repeat size={24} />
                             </button>
                         </div>
 
+                        {/* Bottom Utilities */}
                         <div className="flex justify-between items-center px-6 text-white/50">
-                            <button onClick={() => showToast("Paroles")} className="active-scale hover:text-white transition-colors"><Mic2 size={20} /></button>
-                            <button onClick={() => showToast("Appareils connectés")} className="active-scale hover:text-white transition-colors"><MonitorSpeaker size={20} /></button>
-                            <button onClick={() => showToast("File d'attente")} className="active-scale hover:text-white transition-colors"><ListMusic size={20} /></button>
+                            <button className="active-scale hover:text-white transition-colors p-2"><Mic2 size={22} /></button>
+                            <button className="active-scale hover:text-white transition-colors p-2"><MonitorSpeaker size={22} /></button>
+                            <button className="active-scale hover:text-white transition-colors p-2"><ListMusic size={22} /></button>
                         </div>
                     </div>
                 </div>
             );
         }
 
-        function NavItem({ icon: Icon, label, active, onClick }) {
+        function NavItem({ icon: IconComponent, label, active, onClick }) {
             return (
-                <button onClick={onClick} className={`flex flex-col items-center justify-center space-y-1 w-16 h-full active-scale transition-all duration-300 ${active ? 'text-white' : 'text-white/40 hover:text-white/80'}`}>
-                    <div className={`p-1.5 rounded-full transition-all ${active ? 'bg-[var(--spotify-green)]/20' : ''}`}>
-                        <Icon size={22} strokeWidth={active ? 2.5 : 2} className={active ? 'text-[var(--spotify-green)]' : ''} />
+                <button onClick={onClick} className={`flex flex-col items-center justify-center space-y-1 w-16 h-full active-scale transition-all duration-300 ${active ? 'text-[var(--accent)]' : 'text-white/40 hover:text-white/80'}`}>
+                    <div className={`p-1.5 rounded-full transition-all duration-300 ${active ? 'bg-[var(--accent-glow)] shadow-[0_0_15px_var(--accent-glow)]' : ''}`}>
+                        <IconComponent size={22} strokeWidth={active ? 2.5 : 2} />
                     </div>
                     <span className="text-[10px] font-bold">{label}</span>
                 </button>
