@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Spotify Liquid</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --spotify-green: #1ed760;
+            --bg-base: #000000;
+            --bg-elevated: #121212;
+            --text-primary: #ffffff;
+            --text-secondary: #a7a7a7;
+            --safe-top: env(safe-area-inset-top, 44px);
+            --safe-bottom: env(safe-area-inset-bottom, 34px);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Hide scrollbars for native feel */
+        ::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; -ms-overflow-style: none; }
+
+        /* Real Liquid Glass Effect */
+        .liquid-glass {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.0) 100%);
+            background-color: rgba(18, 18, 18, 0.65);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 8px 32px 0 rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+                inset 0 -1px 0 0 rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            z-index: 10;
+        }
+
+        .liquid-glass-nav {
+            background-color: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 -4px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .active-scale:active {
+            transform: scale(0.96);
+            transition: transform 0.1s;
+        }
+
+        /* Custom Scrollbar for horizontal lists */
+        .horizontal-scroll {
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .horizontal-scroll > * {
+            scroll-snap-align: start;
+        }
+
+        /* Gradient overlays */
+        .top-gradient {
+            background: linear-gradient(to bottom, rgba(80, 80, 80, 0.8) 0%, rgba(18, 18, 18, 1) 100%);
+        }
+
+        .text-shadow {
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Progress Bar */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            margin-top: -5px;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Home, Search, Library, Plus, Menu, ArrowLeft, Download, MoreHorizontal, Heart, User, ChevronLeft, ChevronDown, ListMusic, MonitorSpeaker, Mic2 } = lucide;
+
+        // --- MOCK DATA ---
+        const MOCK_TRACKS = [
+            { id: 1, title: "Feu de bois", artist: "Damso", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", duration: "3:45", explicit: true },
+            { id: 2, title: "Macarena", artist: "Damso", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", duration: "3:12", explicit: true },
+            { id: 3, title: "Signaler", artist: "Damso", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", duration: "4:01", explicit: true },
+            { id: 4, title: "J Respect R", artist: "Damso", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&q=80", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", duration: "3:30", explicit: false },
+        ];
+
+        const MOCK_PLAYLIST_FR = {
+            id: "fr", title: "FR", author: "nuhi", duration: "9 h 15 m", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80",
+            tracks: MOCK_TRACKS
+        };
+
+        const MOCK_ARTIST = {
+            id: "nono", name: "NONO LA GRINTA", listeners: "4,8 M auditeurs mensuels", image: "https://images.unsplash.com/photo-1501612780327-45045538702b?w=800&q=80",
+            topTracks: [
+                { id: 5, title: "LOVE YOU", artist: "NONO LA GRINTA", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&q=80", plays: "141 749 293" },
+                { id: 6, title: "Paris", artist: "NONO LA GRINTA", image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=200&q=80", plays: "156 911 895" },
+                { id: 7, title: "AVEC MOI", artist: "NONO LA GRINTA", image: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=200&q=80", plays: "73 806 667" }
+            ]
+        };
+
+        // --- HELPER COMPONENTS ---
+        const IconButton = ({ icon: Icon, onClick, className = "", active = false }) => (
+            <button onClick={onClick} className={`active-scale transition-transform flex items-center justify-center ${className} ${active ? 'text-[var(--spotify-green)]' : 'text-white'}`}>
+                <Icon size={24} />
+            </button>
+        );
+
+        // --- MAIN APP COMPONENT ---
+        function App() {
+            const [currentTab, setCurrentTab] = useState('home');
+            const [currentScreen, setCurrentScreen] = useState('main'); // main, playlist, artist
+            const [selectedItem, setSelectedItem] = useState(null);
+            
+            // Player State
+            const [currentTrack, setCurrentTrack] = useState(MOCK_TRACKS[0]);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [progress, setProgress] = useState(0);
+            const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+            
+            const audioRef = useRef(null);
+
+            useEffect(() => {
+                if (audioRef.current) {
+                    if (isPlaying) {
+                        audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+                    } else {
+                        audioRef.current.pause();
+                    }
+                }
+            }, [isPlaying, currentTrack]);
+
+            const handleTimeUpdate = () => {
+                if (audioRef.current) {
+                    const p = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+                    setProgress(p || 0);
+                }
+            };
+
+            const handleProgressChange = (e) => {
+                const p = e.target.value;
+                setProgress(p);
+                if (audioRef.current) {
+                    audioRef.current.currentTime = (p / 100) * audioRef.current.duration;
+                }
+            };
+
+            const playTrack = (track) => {
+                setCurrentTrack(track);
+                setIsPlaying(true);
+            };
+
+            const navigateToPlaylist = (playlist) => {
+                setSelectedItem(playlist);
+                setCurrentScreen('playlist');
+            };
+
+            const navigateToArtist = (artist) => {
+                setSelectedItem(artist);
+                setCurrentScreen('artist');
+            };
+
+            const goBack = () => {
+                setCurrentScreen('main');
+                setSelectedItem(null);
+            };
+
+            // Render Screens
+            const renderScreen = () => {
+                if (currentScreen === 'playlist') return <PlaylistScreen playlist={selectedItem} onBack={goBack} onPlay={playTrack} currentTrack={currentTrack} />;
+                if (currentScreen === 'artist') return <ArtistScreen artist={selectedItem} onBack={goBack} onPlay={playTrack} />;
+                
+                switch(currentTab) {
+                    case 'home': return <HomeScreen onPlaylistClick={navigateToPlaylist} onArtistClick={navigateToArtist} />;
+                    case 'search': return <SearchScreen />;
+                    case 'library': return <LibraryScreen onPlaylistClick={navigateToPlaylist} />;
+                    default: return <HomeScreen onPlaylistClick={navigateToPlaylist} onArtistClick={navigateToArtist} />;
+                }
+            };
+
+            return (
+                <div className="flex flex-col h-[100dvh] bg-black text-white relative overflow-hidden">
+                    {/* Audio Element */}
+                    <audio 
+                        ref={audioRef} 
+                        src={currentTrack.audio} 
+                        onTimeUpdate={handleTimeUpdate}
+                        onEnded={() => setIsPlaying(false)}
+                    />
+
+                    {/* Status Bar Area (Simulated) */}
+                    <div className="h-[var(--safe-top)] w-full flex items-center justify-between px-6 pt-2 text-sm font-semibold z-50 shrink-0 pointer-events-none">
+                        <span>03:05</span>
+                        <div className="flex items-center space-x-1">
+                            <span>5G</span>
+                            <div className="w-6 h-3 border border-white rounded-[3px] relative"><div className="absolute top-0 right-0 bottom-0 left-0 bg-white rounded-[1px] m-[1px]" style={{width: '75%'}}></div></div>
+                        </div>
+                    </div>
+
+                    {/* Main Content Area */}
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative" style={{ paddingBottom: '160px' }}>
+                        {renderScreen()}
+                    </div>
+
+                    {/* Mini Player & Bottom Nav */}
+                    <div className="absolute bottom-0 left-0 right-0 z-40 px-2 pb-[var(--safe-bottom)] bg-gradient-to-t from-black via-black/90 to-transparent pt-4">
+                        
+                        {/* Mini Player */}
+                        {!isPlayerOpen && (
+                            <div 
+                                onClick={() => setIsPlayerOpen(true)}
+                                className="liquid-glass mx-auto max-w-md w-full rounded-xl p-2 mb-2 flex items-center justify-between cursor-pointer active-scale animate-fade-in"
+                            >
+                                <div className="flex items-center space-x-3 truncate">
+                                    <img src={currentTrack.image} className="w-10 h-10 rounded-md object-cover" alt="cover" />
+                                    <div className="flex flex-col truncate">
+                                        <span className="text-sm font-semibold truncate leading-tight">{currentTrack.title}</span>
+                                        <span className="text-xs text-[var(--text-secondary)] truncate leading-tight">{currentTrack.artist}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center space-x-4 pr-2">
+                                    <button onClick={(e) => { e.stopPropagation(); setIsPlaying(!isPlaying); }} className="text-white active-scale">
+                                        {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Nav Bar */}
+                        <nav className="liquid-glass-nav rounded-3xl mx-auto max-w-md w-full flex justify-around items-center h-16 px-2">
+                            <NavItem icon={Home} label="Accueil" active={currentTab === 'home'} onClick={() => { setCurrentTab('home'); goBack(); }} />
+                            <NavItem icon={Search} label="Recherche" active={currentTab === 'search'} onClick={() => { setCurrentTab('search'); goBack(); }} />
+                            <NavItem icon={Library} label="Bibliothèque" active={currentTab === 'library'} onClick={() => { setCurrentTab('library'); goBack(); }} />
+                            <NavItem icon={Menu} label="Premium" onClick={() => {}} />
+                            <NavItem icon={Plus} label="Créer" onClick={() => {}} />
+                        </nav>
+                    </div>
+
+                    {/* Full Screen Player */}
+                    {isPlayerOpen && (
+                        <FullPlayer 
+                            track={currentTrack} 
+                            isPlaying={isPlaying} 
+                            setIsPlaying={setIsPlaying} 
+                            onClose={() => setIsPlayerOpen(false)}
+                            progress={progress}
+                            handleProgressChange={handleProgressChange}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        // --- SCREENS ---
+
+        function HomeScreen({ onPlaylistClick, onArtistClick }) {
+            return (
+                <div className="animate-fade-in pb-10">
+                    <header className="px-5 pt-4 pb-6 flex justify-between items-center sticky top-0 z-30 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
+                        <h1 className="text-3xl font-bold tracking-tight">Home</h1>
+                        <div className="flex items-center space-x-2 bg-neutral-800/80 rounded-full p-1 pr-3 liquid-glass">
+                            <Menu size={20} className="ml-2 text-white" />
+                            <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-xs font-bold text-black border border-black/20">N</div>
+                        </div>
+                    </header>
+
+                    {/* Top Carousel */}
+                    <section className="px-5 mb-8">
+                        <div className="flex space-x-4 horizontal-scroll pb-4 -mx-5 px-5">
+                            <div onClick={() => onArtistClick(MOCK_ARTIST)} className="min-w-[160px] w-[160px] cursor-pointer group">
+                                <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2 shadow-lg">
+                                    <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&q=80" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300" alt="EP" />
+                                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+                                </div>
+                                <p className="text-sm font-semibold truncate">EP</p>
+                                <p className="text-xs text-[var(--text-secondary)] truncate">teenage dream</p>
+                            </div>
+                            <div className="min-w-[160px] w-[160px] cursor-pointer group">
+                                <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2 shadow-lg">
+                                    <img src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=80" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300" alt="Playlist" />
+                                    <div className="absolute inset-0 flex flex-col justify-end p-3">
+                                        <h3 className="text-red-600 font-black text-2xl leading-none tracking-tighter uppercase" style={{fontFamily: 'Impact, sans-serif'}}>ALL DED</h3>
+                                        <h3 className="text-red-600 font-black text-2xl leading-none tracking-tighter uppercase" style={{fontFamily: 'Impact, sans-serif'}}>ALL DED</h3>
+                                    </div>
+                                </div>
+                                <p className="text-sm font-semibold truncate">Playlist</p>
+                                <p className="text-xs text-[var(--text-secondary)] truncate">US</p>
+                            </div>
+                            <div className="min-w-[160px] w-[160px]">
+                                <div className="w-full aspect-square rounded-lg bg-neutral-800 mb-2"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Shortcuts Grid */}
+                    <section className="px-5 mb-8">
+                        <div className="grid grid-cols-2 gap-2">
+                            {[
+                                { title: "Nouméa", bg: "bg-[#3e3e3e]", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=100&q=80" },
+                                { title: "Titres likés", bg: "bg-gradient-to-br from-indigo-600 to-purple-800", img: "heart" },
+                                { title: "Alex G playlist except it's all hi...", bg: "bg-[#5a3a22]", img: "https://images.unsplash.com/photo-1501612780327-45045538702b?w=100&q=80" },
+                                { title: "a6el", bg: "bg-[#4a2e1e]", img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&q=80" },
+                                { title: "", bg: "bg-[#3d1a14]", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&q=80" },
+                                { title: "Theodora", bg: "bg-[#2a1b54]", img: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=100&q=80" },
+                                { title: "FR", bg: "bg-[#2a2a2a]", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=100&q=80" },
+                                { title: "KYKY2BONDY", bg: "bg-[#2d2d2d]", img: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&q=80" },
+                            ].map((item, i) => (
+                                <div key={i} onClick={() => item.title === "FR" ? onPlaylistClick(MOCK_PLAYLIST_FR) : null} className={`${item.bg} flex items-center rounded-md overflow-hidden h-14 active-scale cursor-pointer relative shadow-sm`}>
+                                    {item.img === "heart" ? (
+                                        <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-white flex items-center justify-center shrink-0">
+                                            <Heart size={24} fill="white" className="text-white" />
+                                        </div>
+                                    ) : (
+                                        <img src={item.img} className="w-14 h-14 object-cover shrink-0" alt={item.title} />
+                                    )}
+                                    <span className="text-xs font-bold px-2 line-clamp-2">{item.title}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Recommandations */}
+                    <section className="px-5 pb-20">
+                        <h2 className="text-xl font-bold mb-4 tracking-tight">Recommandations du jour</h2>
+                        <div className="flex space-x-4 overflow-x-auto pb-4 horizontal-scroll -mx-5 px-5">
+                            <div className="min-w-[140px] w-[140px]">
+                                <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80" className="w-full aspect-square rounded-md object-cover mb-2 shadow-md" alt="Rec 1" />
+                                <p className="text-sm font-semibold truncate">Daily Mix 1</p>
+                                <p className="text-xs text-[var(--text-secondary)] line-clamp-2">Damso, Nono La Grinta, Heuss...</p>
+                            </div>
+                            <div className="min-w-[140px] w-[140px]">
+                                <img src="https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=300&q=80" className="w-full aspect-square rounded-md object-cover mb-2 shadow-md" alt="Rec 2" />
+                                <p className="text-sm font-semibold truncate">Mix Rap FR</p>
+                                <p className="text-xs text-[var(--text-secondary)] line-clamp-2">Les meilleurs sons du moment</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            );
+        }
+
+        function SearchScreen() {
+            const categories = [
+                { title: "Musique", color: "bg-[#e13300]", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=200&q=80" },
+                { title: "Podcasts", color: "bg-[#006450]", img: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&q=80" },
+                { title: "Livres audio", color: "bg-[#1e3264]", img: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&q=80" },
+                { title: "Événements live", color: "bg-[#7358ff]", img: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=200&q=80" },
+                { title: "Conçu spécialement pour vous", color: "bg-[#8d67ab]", img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&q=80" },
+                { title: "Sorties à venir", color: "bg-[#1e6a4b]", img: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=200&q=80" },
+                { title: "Dernières sorties", color: "bg-[#477d3b]", img: "https://images.unsplash.com/photo-1501612780327-45045538702b?w=200&q=80" },
+                { title: "Hip-Hop", color: "bg-[#777777]", img: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=200&q=80" },
+                { title: "Pop", color: "bg-[#148a08]", img: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200&q=80" },
+                { title: "Variété Française", color: "bg-[#1e3264]", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=200&q=80" },
+            ];
+
+            return (
+                <div className="animate-fade-in px-5 pt-4 pb-10">
+                    <header className="flex justify-between items-center mb-6">
+                        <h1 className="text-3xl font-bold tracking-tight">Rechercher</h1>
+                        <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-sm font-bold text-black border border-black/20">N</div>
+                    </header>
+
+                    <div className="relative mb-6">
+                        <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black" />
+                        <input 
+                            type="text" 
+                            placeholder="Que souhaitez-vous écouter ?" 
+                            className="w-full bg-[#242424] text-white rounded-md py-3 pl-10 pr-4 text-sm font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        {categories.map((cat, i) => (
+                            <div key={i} className={`${cat.color} relative rounded-lg overflow-hidden aspect-[16/9] p-3 cursor-pointer active-scale`}>
+                                <h2 className="text-white font-bold text-lg leading-tight w-2/3 z-10 relative">{cat.title}</h2>
+                                <img 
+                                    src={cat.img} 
+                                    className="absolute -right-4 -bottom-2 w-20 h-20 object-cover rotate-[25deg] shadow-xl rounded-sm" 
+                                    alt={cat.title} 
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        function LibraryScreen({ onPlaylistClick }) {
+            return (
+                <div className="animate-fade-in px-5 pt-4 pb-10">
+                    <header className="flex justify-between items-center mb-6">
+                        <h1 className="text-3xl font-bold tracking-tight">Bibliothèque</h1>
+                        <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-sm font-bold text-black border border-black/20">N</div>
+                    </header>
+                    
+                    <div className="flex space-x-2 mb-6 overflow-x-auto">
+                        <span className="px-4 py-1.5 bg-[#242424] text-white text-sm font-medium rounded-full whitespace-nowrap">Playlists</span>
+                        <span className="px-4 py-1.5 bg-[#242424] text-white text-sm font-medium rounded-full whitespace-nowrap">Artistes</span>
+                        <span className="px-4 py-1.5 bg-[#242424] text-white text-sm font-medium rounded-full whitespace-nowrap">Albums</span>
+                    </div>
+
+                    <div className="flex items-center space-x-4 mb-6 cursor-pointer active-scale" onClick={() => onPlaylistClick(MOCK_PLAYLIST_FR)}>
+                        <div className="relative w-16 h-16 rounded-md overflow-hidden shrink-0 shadow-lg">
+                            <div className="grid grid-cols-2 grid-rows-2 w-full h-full">
+                                <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=100&q=80" className="object-cover w-full h-full" alt="Cover 1"/>
+                                <img src="https://images.unsplash.com/photo-1501612780327-45045538702b?w=100&q=80" className="object-cover w-full h-full" alt="Cover 2"/>
+                                <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&q=80" className="object-cover w-full h-full" alt="Cover 3"/>
+                                <img src="https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=100&q=80" className="object-cover w-full h-full" alt="Cover 4"/>
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-white font-semibold text-base">FR</p>
+                            <p className="text-[var(--text-secondary)] text-sm">Playlist • nuhi</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4 mb-6 cursor-pointer active-scale">
+                        <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 shadow-lg bg-gradient-to-br from-indigo-600 to-purple-800 flex items-center justify-center">
+                            <Heart size={30} fill="white" className="text-white" />
+                        </div>
+                        <div>
+                            <p className="text-white font-semibold text-base">Titres likés</p>
+                            <p className="text-[var(--text-secondary)] text-sm">Playlist • nuhi</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function PlaylistScreen({ playlist, onBack, onPlay, currentTrack }) {
+            return (
+                <div className="animate-fade-in pb-10">
+                    {/* Hero Section */}
+                    <div className="relative w-full aspect-[4/3] max-h-[350px] overflow-hidden">
+                        <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
+                            <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80" className="object-cover w-full h-full" alt="Mosaic 1"/>
+                            <img src="https://images.unsplash.com/photo-1501612780327-45045538702b?w=500&q=80" className="object-cover w-full h-full" alt="Mosaic 2"/>
+                            <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80" className="object-cover w-full h-full" alt="Mosaic 3"/>
+                            <img src="https://images.unsplash.com/photo-1493225457124-a1a2a5f5c518?w=500&q=80" className="object-cover w-full h-full" alt="Mosaic 4"/>
+                        </div>
+                        
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[#121212]"></div>
+
+                        {/* Top Buttons */}
+                        <div className="absolute top-4 left-4 right-4 flex justify-between z-10 pt-[var(--safe-top)]">
+                            <button onClick={onBack} className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center active-scale text-white">
+                                <ChevronLeft size={24} />
+                            </button>
+                            <button className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center active-scale text-white">
+                                <MoreHorizontal size={24} />
+                            </button>
+                        </div>
+
+                        {/* Info Overlay */}
+                        <div className="absolute bottom-4 left-4 right-4 z-10">
+                            <h1 className="text-4xl font-black mb-1 text-shadow">{playlist.title}</h1>
+                            <div className="flex items-center space-x-2 text-sm text-white/90 font-medium text-shadow">
+                                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-[10px] text-black font-bold">N</div>
+                                <span>{playlist.author}</span>
+                                <span>•</span>
+                                <span>{playlist.duration}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="px-5 py-4 flex items-center justify-between">
+                        <Shuffle size={24} className="text-[var(--spotify-green)] active-scale cursor-pointer" />
+                        <button onClick={() => onPlay(playlist.tracks[0])} className="w-14 h-14 bg-[var(--spotify-green)] rounded-full flex items-center justify-center text-black active-scale shadow-lg">
+                            <Play size={28} fill="currentColor" className="ml-1" />
+                        </button>
+                        <Download size={24} className="text-[var(--text-secondary)] active-scale cursor-pointer" />
+                    </div>
+
+                    {/* Tracklist */}
+                    <div className="px-5">
+                        {playlist.tracks.map((track, i) => {
+                            const isActive = currentTrack.id === track.id;
+                            return (
+                                <div key={track.id} onClick={() => onPlay(track)} className="flex items-center py-2 group cursor-pointer active:bg-white/5 rounded-md px-2 -mx-2 transition-colors">
+                                    <div className="w-8 text-center text-[var(--text-secondary)] text-sm font-medium group-hover:hidden">
+                                        {isActive ? <span className="text-[var(--spotify-green)]">▶</span> : i + 1}
+                                    </div>
+                                    <div className="hidden group-hover:flex w-8 justify-center">
+                                        <Play size={16} fill="white" className="text-white" />
+                                    </div>
+                                    
+                                    <img src={track.image} className="w-10 h-10 rounded-sm object-cover mx-2" alt="cover" />
+                                    
+                                    <div className="flex-1 min-w-0 pr-2">
+                                        <p className={`text-base truncate font-medium ${isActive ? 'text-[var(--spotify-green)]' : 'text-white'}`}>{track.title}</p>
+                                        <div className="flex items-center space-x-1">
+                                            {track.explicit && <span className="bg-gray-500 text-black text-[9px] font-bold px-1 rounded-sm">E</span>}
+                                            <p className="text-sm text-[var(--text-secondary)] truncate">{track.artist}</p>
+                                        </div>
+                                    </div>
+                                    <MoreHorizontal size={20} className="text-[var(--text-secondary)]" />
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        }
+
+        function ArtistScreen({ artist, onBack, onPlay }) {
+            return (
+                <div className="animate-fade-in pb-10">
+                    {/* Hero Section */}
+                    <div className="relative w-full h-[400px]">
+                        <img src={artist.image} className="w-full h-full object-cover object-top" alt={artist.name} />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-[#121212]"></div>
+                        
+                        {/* Top Buttons */}
+                        <div className="absolute top-4 left-4 right-4 flex justify-between z-10 pt-[var(--safe-top)]">
+                            <button onClick={onBack} className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center active-scale text-white">
+                                <ChevronLeft size={24} />
+                            </button>
+                            <button className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center active-scale text-white">
+                                <MoreHorizontal size={24} />
+                            </button>
+                        </div>
+
+                        {/* Artist Info */}
+                        <div className="absolute bottom-0 left-0 w-full px-5 pb-4 bg-gradient-to-t from-[#121212] via-[#121212]/80 to-transparent pt-10">
+                            <h1 className="text-5xl font-black mb-1 text-shadow uppercase leading-none" style={{fontFamily: 'Impact, sans-serif', letterSpacing: '-0.02em', transform: 'scaleY(1.1)', transformOrigin: 'bottom'}}>{artist.name}</h1>
+                            <p className="text-white/80 text-sm font-medium mt-3">{artist.listeners}</p>
+                        </div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="px-5 py-4 flex items-center space-x-6">
+                        <Shuffle size={24} className="text-[var(--spotify-green)] active-scale cursor-pointer" />
+                        <button onClick={() => onPlay(artist.topTracks[0])} className="w-14 h-14 bg-[var(--spotify-green)] rounded-full flex items-center justify-center text-black active-scale shadow-lg">
+                            <Play size={28} fill="currentColor" className="ml-1" />
+                        </button>
+                        <button className="px-4 py-2 border border-white/30 rounded-full text-sm font-semibold active-scale">Suivre</button>
+                    </div>
+
+                    {/* Top Tracks */}
+                    <div className="px-5">
+                        <h2 className="text-xl font-bold mb-4 tracking-tight">Titres les plus écoutés</h2>
+                        {artist.topTracks.map((track, i) => (
+                            <div key={track.id} onClick={() => onPlay(track)} className="flex items-center py-3 group cursor-pointer active:bg-white/5 rounded-md px-2 -mx-2 transition-colors">
+                                <div className="w-8 text-center text-[var(--text-secondary)] text-sm font-medium">{i + 1}</div>
+                                <img src={track.image} className="w-12 h-12 rounded-sm object-cover mx-3" alt="cover" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-base text-white truncate font-medium">{track.title}</p>
+                                    <div className="flex items-center space-x-2">
+                                        <span className="bg-gray-500 text-black text-[9px] font-bold px-1 rounded-sm">E</span>
+                                        <p className="text-sm text-[var(--text-secondary)] font-mono">{track.plays}</p>
+                                    </div>
+                                </div>
+                                <MoreHorizontal size={20} className="text-[var(--text-secondary)]" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- FULL SCREEN PLAYER ---
+        function FullPlayer({ track, isPlaying, setIsPlaying, onClose, progress, handleProgressChange }) {
+            return (
+                <div className="fixed inset-0 z-50 flex flex-col animate-slide-up bg-black">
+                    {/* Dynamic Background */}
+                    <div className="absolute inset-0 overflow-hidden opacity-60">
+                        <img src={track.image} className="w-full h-full object-cover blur-[80px] scale-150 saturate-150" alt="bg" />
+                        <div className="absolute inset-0 bg-black/40"></div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="relative z-10 flex flex-col h-full px-6 pb-[var(--safe-bottom)] pt-[var(--safe-top)]">
+                        
+                        {/* Header */}
+                        <div className="flex justify-between items-center py-4">
+                            <button onClick={onClose} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center active-scale text-white">
+                                <ChevronDown size={28} />
+                            </button>
+                            <span className="text-xs font-bold tracking-widest uppercase text-white/80">En cours de lecture</span>
+                            <button className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center active-scale text-white">
+                                <MoreHorizontal size={24} />
+                            </button>
+                        </div>
+
+                        {/* Artwork */}
+                        <div className="flex-1 flex items-center justify-center py-6">
+                            <div className="w-full aspect-square max-w-[350px] rounded-lg overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
+                                <img src={track.image} className="w-full h-full object-cover" alt={track.title} />
+                            </div>
+                        </div>
+
+                        {/* Info & Progress */}
+                        <div className="mb-8">
+                            <div className="flex justify-between items-end mb-4">
+                                <div className="min-w-0 pr-4">
+                                    <h1 className="text-2xl font-bold truncate text-white">{track.title}</h1>
+                                    <p className="text-lg text-white/70 truncate">{track.artist}</p>
+                                </div>
+                                <button className="text-[var(--spotify-green)] active-scale shrink-0">
+                                    <Plus size={28} className="border border-current rounded-full p-0.5" />
+                                </button>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2 text-xs text-white/60 font-mono mb-1">
+                                <span>{Math.floor((progress / 100) * (225)) ? `${Math.floor(((progress / 100) * 225) / 60)}:${Math.floor(((progress / 100) * 225) % 60).toString().padStart(2, '0')}` : '0:00'}</span>
+                                <div className="flex-1 flex items-center">
+                                    <input 
+                                        type="range" 
+                                        min="0" 
+                                        max="100" 
+                                        value={progress} 
+                                        onChange={handleProgressChange}
+                                        className="w-full h-1 appearance-none bg-white/20 rounded-full outline-none"
+                                        style={{ background: `linear-gradient(to right, var(--spotify-green) ${progress}%, rgba(255,255,255,0.2) ${progress}%)` }}
+                                    />
+                                </div>
+                                <span>{track.duration}</span>
+                            </div>
+                        </div>
+
+                        {/* Main Controls */}
+                        <div className="flex justify-between items-center mb-10 px-2">
+                            <button className="text-[var(--spotify-green)] active-scale">
+                                <Shuffle size={24} />
+                            </button>
+                            <button className="text-white active-scale">
+                                <SkipBack size={36} fill="currentColor" />
+                            </button>
+                            <button onClick={() => setIsPlaying(!isPlaying)} className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-black active-scale shadow-xl">
+                                {isPlaying ? <Pause size={36} fill="currentColor" /> : <Play size={36} fill="currentColor" className="ml-2" />}
+                            </button>
+                            <button className="text-white active-scale">
+                                <SkipForward size={36} fill="currentColor" />
+                            </button>
+                            <button className="text-white/70 active-scale">
+                                <Repeat size={24} />
+                            </button>
+                        </div>
+
+                        {/* Bottom Controls */}
+                        <div className="flex justify-between items-center px-6 text-white/60">
+                            <button className="active-scale"><Mic2 size={20} /></button>
+                            <button className="active-scale"><MonitorSpeaker size={20} /></button>
+                            <button className="active-scale"><ListMusic size={20} /></button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- UTILS ---
+        function NavItem({ icon: Icon, label, active, onClick }) {
+            return (
+                <button onClick={onClick} className={`flex flex-col items-center justify-center space-y-1 w-14 active-scale transition-colors ${active ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
+                    <Icon size={22} strokeWidth={active ? 2.5 : 2} className={active ? 'text-[var(--spotify-green)]' : ''} />
+                    <span className="text-[10px] font-semibold">{label}</span>
+                </button>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
